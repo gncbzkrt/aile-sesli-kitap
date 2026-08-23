@@ -1,3 +1,13 @@
+# v5.0.2 LTS FILTERED STRICT
+
+Son filtre yaması:
+- Türkçe karakterler normalize edilerek düz metin blacklist uygulanır.
+- `iddianame`, `soruşturma`, `şüpheli`, `sanık`, `evrak` vb. artık kelime sınırına bağlı değildir.
+- `Ergenekon + bölüm/terör örgütü/eylemler` kombinasyonları doğrudan elenir.
+- Eski arşiv cache anahtarı geçersiz kılındı.
+- Service Worker `skipWaiting()` + `clients.claim()` ile yeni sürümü daha hızlı devralır.
+- Statik dosyalarda network-first davranış kullanılarak eski uygulama dosyasının takılı kalması azaltıldı.
+
 # v5.0.1 LTS FILTERED — Edebî Eser Filtresi
 
 Bu yama v5.0 kaynak mimarisini değiştirmez; yalnız kullanıcıya gösterilen sonuçları temizler.

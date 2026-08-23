@@ -1,5 +1,5 @@
 {
-  "version": "5.0.1-LTS-FILTERED",
+  "version": "5.0.2-LTS-FILTERED-STRICT",
   "frozenAt": "2026-08-23",
   "scope": "Turkish audiobook / TTS PWA",
   "sources": [
@@ -66,13 +66,16 @@
       "reports",
       "protocols",
       "petitions",
-      "official notices"
+      "official notices",
+      "Ergenekon indictment section pages",
+      "structured suspect/section pages"
     ],
     "heuristics": [
       "legal/document keyword blacklist",
       "very long segmented title rejection",
       "excessive slash/number rejection",
       "document-like uppercase title rejection"
-    ]
+    ],
+    "strictPatch": "Normalized substring blacklist + structured-document compound checks + archive cache v2"
   }
 }
