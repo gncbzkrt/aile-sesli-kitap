@@ -1,3 +1,18 @@
+# Sesli Kitaplık v4.2 — Dinamik Kamu Malı Arşiv + Gerçek Özet Modu
+
+## Değişiklikler
+- 15 dakika modu artık ilk 15 dakika değildir; **özet modu** olarak çalışır.
+- İlk seçkide insan tarafından hazırlanmış KitUP tarzı Türkçe özetler bulunur.
+- Türkçe Vikikaynak'ın **Türkiye'de yayımlanan kamu malı eserler** ve **Türkiye'de yayımı serbest eserler** kategorileri uygulamadan dinamik çekilir.
+- Kategori sayfalaması desteklenir; yüzlerce eser tek arşivde aranabilir.
+- Arşiv 24 saat yerel önbellekte tutulur.
+- Seçilen eser metin olarak cihaza indirilir ve TTS ile okunur.
+- Sabit 42 eserlik düzenlenmiş katalog korunur.
+
+## Önemli
+Dinamik arşivde yalnız kitap değil; şiir, belge, mektup ve kısa metinler de bulunabilir. Uygulama, kaynağın lisans kategorisini temel alır.
+"Özet" yalnız özet içeriği hazırlanmış seçili eserlerde görünür. Tam metin TTS ise arşivdeki uygun metinlerde çalışır.
+
 # Sesli Kitaplık v4.1 — Storytel + KitUP dokunuşu
 
 Bu sürüm v4 Türkçe TTS altyapısının üzerine keşif ve alışkanlık katmanı ekler.
