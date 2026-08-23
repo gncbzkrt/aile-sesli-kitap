@@ -1,7 +1,7 @@
 {
   "name": "Aile Sesli Kitaplığı",
   "short_name": "Sesli Kitaplık",
-  "description": "Aile içi, çevrimdışı çalışan ücretsiz sesli kitap PWA uygulaması.",
+  "description": "Cihaz bazlı, çevrimdışı çalışan ücretsiz kişisel sesli kitap PWA uygulaması.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

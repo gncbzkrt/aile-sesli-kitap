@@ -30,6 +30,19 @@
       <div id="continueCard"></div>
     </section>
 
+    <section class="section catalog-section">
+      <div class="section-title-row">
+        <div><h2>Ücretsiz Katalog</h2><p class="muted small">LibriVox kamu malı sesli kitapları · internet bağlantısı gerekir</p></div>
+      </div>
+      <div class="catalog-toolbar">
+        <input id="catalogSearch" type="search" placeholder="Ücretsiz kitap ara… (İngilizce başlık/yazar)" />
+        <button id="catalogSearchBtn" class="primary">Ara</button>
+      </div>
+      <div id="catalogFeatured" class="book-grid"></div>
+      <div id="catalogResults" class="book-grid"></div>
+      <p id="catalogStatus" class="muted small"></p>
+    </section>
+
     <section class="section">
       <div class="section-title-row">
         <h2>Kütüphane</h2>
@@ -95,6 +108,7 @@
     <div class="player-options">
       <button id="speedBtn">1× Hız</button>
       <button id="bookmarkBtn">🔖 Yer imi</button>
+      <button id="showBookmarksBtn">📌 Yer imleri</button>
       <button id="sleepBtn">🌙 Uyku</button>
       <button id="favoriteBtn">♡ Favori</button>
     </div>
@@ -145,11 +159,27 @@
         <span>Koyu tema</span>
         <input id="darkModeToggle" type="checkbox" checked />
       </label>
-      <button id="exportBtn" class="ghost full">Kütüphane yedeği bilgisi</button>
+      <button id="manageGenresBtn" class="ghost full">Türleri yönet</button>
+      <button id="showHistoryBtn" class="ghost full">Dinleme geçmişi</button>
+      <button id="showStorageBtn" class="ghost full">Depolama kullanımı</button>
+      <button id="exportBtn" class="ghost full">Yedekleme bilgisi</button>
       <button id="clearBtn" class="danger full">Tüm yerel verileri sil</button>
       <p class="muted small">Not: Ses dosyaları cihazın tarayıcı depolamasında saklanır. Tarayıcı verileri silinirse kitaplar da silinebilir.</p>
     </div>
   </div>
+
+
+  <div id="editBookModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card"><div class="modal-head"><h2>Kitabı düzenle</h2><button class="modal-close" data-close-modal>×</button></div>
+      <input id="editBookId" type="hidden" />
+      <label>Kitap adı<input id="editTitleInput" /></label><label>Yazar<input id="editAuthorInput" /></label>
+      <label>Tür<select id="editGenreInput"></select></label><label>Kapak resmi<input id="editCoverInput" type="file" accept="image/*" /></label>
+      <button id="saveEditBookBtn" class="primary full">Değişiklikleri kaydet</button></div>
+  </div>
+  <div id="genresModal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><div class="modal-head"><h2>Türleri yönet</h2><button class="modal-close" data-close-modal>×</button></div><div class="inline-form"><input id="newGenreInput" placeholder="Yeni tür adı"/><button id="addGenreBtn" class="primary">Ekle</button></div><div id="genreManageList" class="manage-list"></div></div></div>
+  <div id="bookmarksModal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><div class="modal-head"><h2>Yer imleri</h2><button class="modal-close" data-close-modal>×</button></div><div id="bookmarksList" class="manage-list"></div></div></div>
+  <div id="historyModal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><div class="modal-head"><h2>Dinleme geçmişi</h2><button class="modal-close" data-close-modal>×</button></div><div id="historyList" class="manage-list"></div></div></div>
+  <div id="storageModal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><div class="modal-head"><h2>Depolama</h2><button class="modal-close" data-close-modal>×</button></div><div id="storageInfo" class="storage-card"></div></div></div>
 
   <div id="toast" class="toast hidden"></div>
   <audio id="audio" preload="metadata"></audio>

@@ -1,42 +1,12 @@
-# Aile Sesli Kitaplığı PWA
+# Aile Sesli Kitaplığı PWA v3
 
-Tamamen ücretsiz, sunucusuz ve aile içi kullanım için hazırlanmış sesli kitap PWA başlangıç sürümü.
+## Yeni: Ücretsiz Katalog
+LibriVox kamu malı sesli kitap kataloğu uygulamaya bağlandı. Öne çıkan ücretsiz kitapları tek dokunuşla kişisel cihaz kütüphanesine ekleyebilir ve internetten dinleyebilirsiniz. Kendi ses dosyalarınızı ekleme özelliği aynen devam eder. Ortak aile kütüphanesi veya kullanıcı hesabı yoktur.
 
-## Özellikler
-- Android ve iOS ana ekrana kurulum
-- Kitap/yazar/tür bilgisi
-- Tür filtresi ve arama
-- Kapak görseli
-- Çok bölümlü sesli kitap
-- Oynat/duraklat, 15 sn ileri/geri
-- Hız: 0.75× – 2×
-- Otomatik sonraki bölüm
-- Kaldığın yeri otomatik kaydetme
-- Dinlemeye devam et
-- Favoriler
-- Yer imi
-- Uyku zamanlayıcısı
-- Media Session / kilit ekranı kontrolleri destekleyen tarayıcılarda entegrasyon
-- Çevrimdışı uygulama kabuğu
-- Ses dosyalarını IndexedDB'de yerel saklama
-- Koyu / açık tema
+# Aile Sesli Kitaplığı PWA v2
 
-## Kurulum
-PWA'nın düzgün çalışması için dosyaları `file://` ile açmak yerine HTTPS üzerinden yayınlayın.
+Her kullanıcı kendi telefonunda bağımsız çalışır. Ortak hesap, ortak kitaplık ve bulut senkronizasyonu yoktur.
 
-Ücretsiz seçenekler:
-- GitHub Pages
-- Cloudflare Pages
-- Netlify ücretsiz planı
+Yeni özellikler: kitap düzenleme, özel tür yönetimi, yer imi listesi ve yer imine gitme, dinleme geçmişi, depolama kullanımı, gelişmiş uyku zamanlayıcısı. Mevcut v1 özellikleri korunur.
 
-Klasörü olduğu gibi yayınlayın; build adımı yoktur.
-
-## Android
-Chrome ile siteyi açın → menü → "Ana ekrana ekle" / "Uygulamayı yükle".
-
-## iPhone / iPad
-Safari ile siteyi açın → Paylaş → "Ana Ekrana Ekle".
-
-## Önemli
-Bu sürümde ses dosyaları her cihazın kendi tarayıcı depolamasında tutulur. Aynı kitapları aile bireylerinin cihazlarına ayrı ayrı eklemek gerekir.
-Tarayıcı/site verileri temizlenirse yerel kitaplar da silinebilir.
+PWA için HTTPS üzerinden yayınlayın. Android: Chrome > Uygulamayı yükle. iPhone/iPad: Safari > Paylaş > Ana Ekrana Ekle.
