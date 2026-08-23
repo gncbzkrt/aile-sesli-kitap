@@ -5,7 +5,7 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const audio=$("#audio");
 let db,books=[],selectedCatalogCategory="Tümü",currentBook=null,currentChapter=0,currentObjectUrl=null,deferredPrompt=null;
 let tts={playing:false,paused:false,segments:[],segmentIndex:0,utterance:null};
-let voices=[],sleepTimer=null,saveTimer=null;
+let voices=[],sleepTimer=null,saveTimer=null,quickSessionTimer=null,quickSessionActive=false;
 
 function uid(){return crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random().toString(16).slice(2)}
 function esc(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
@@ -27,11 +27,14 @@ async function init(){
   const theme=await getOne(SETTINGS,"theme"), rate=await getOne(SETTINGS,"ttsRate"), pitch=await getOne(SETTINGS,"ttsPitch");
   if(rate)$("#rateRange").value=rate.value;if(pitch)$("#pitchRange").value=pitch.value;
   document.body.classList.toggle("light",theme?.value==="light");$("#darkToggle").checked=theme?.value!=="light";
-  bind();renderCatalog();renderAll();initVoices();updateRateLabels();
+  bind();renderCatalog();renderAll();renderKitupHome();initVoices();updateRateLabels();
   if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 }
 function bind(){
   $("#heroExplore").onclick=()=>$("#catalogSection").scrollIntoView({behavior:"smooth"});
+  $("#refreshForYou").onclick=()=>renderForYou(true);
+  $("#quickPickBtn").onclick=pickQuickBook;
+  $("#statsBtn").onclick=showStats;
   $("#heroContinue").onclick=()=>{const b=latestBook();if(b)openBook(b.id)};
   $("#catalogSearchBtn").onclick=renderCatalog;$("#catalogSearch").oninput=()=>{if(!$("#catalogSearch").value)renderCatalog()};
   $("#librarySearch").oninput=renderLibrary;$("#libraryGenre").onchange=renderLibrary;
@@ -82,6 +85,7 @@ function showCatalogDetail(id){
   const exists=books.find(b=>b.catalogId===x.id);
   $("#detailAddBtn").textContent=exists?"▶ Kitaplığımda — Dinle":"Kitaplığıma Ekle ve Dinle";
   $("#detailAddBtn").onclick=()=>exists?openBook(exists.id):addTtsCatalogBook(x);
+  $("#detailQuickBtn").onclick=()=>startQuickFromCatalog(x);
   $("#backdrop").classList.remove("hidden");$("#detailSheet").classList.remove("hidden");
 }
 async function wikiFetch(title){
@@ -124,8 +128,8 @@ async function addTtsCatalogBook(x){
   finally{loading(false)}
 }
 function latestBook(){return books.filter(b=>b.lastPlayedAt).sort((a,b)=>b.lastPlayedAt-a.lastPlayedAt)[0]}
-function renderAll(){renderLibrary();renderFavorites();renderContinue();populateGenres()}
-function libraryCard(b){const p=bookProgress(b);return `<article class="library-card"><button class="cover-card" data-openbook="${b.id}">${coverHtml({...b,cover:b.coverClass||"c1"})}<div class="card-title">${esc(b.title)}</div><div class="card-author">${esc(b.author)} · %${p}</div></button><button class="card-menu" data-menu="${b.id}">⋮</button></article>`}
+function renderAll(){renderLibrary();renderFavorites();renderContinue();populateGenres();renderForYou(false)}
+function libraryCard(b){const p=bookProgress(b);return `<article class="library-card"><button class="cover-card" data-openbook="${b.id}">${p>=98?'<span class="completed-badge">✓ Tamamlandı</span>':''}${coverHtml({...b,cover:b.coverClass||"c1"})}<div class="card-title">${esc(b.title)}</div><div class="card-author">${esc(b.author)} · %${p}</div></button><button class="card-menu" data-menu="${b.id}">⋮</button></article>`}
 function populateGenres(){const gs=[...new Set(books.map(b=>b.genre))].sort((a,b)=>a.localeCompare(b,"tr"));$("#libraryGenre").innerHTML=`<option value="">Tüm türler</option>`+gs.map(g=>`<option>${esc(g)}</option>`).join("");$("#addGenre").innerHTML=["Roman","Hikâye","Çocuk","Tarih","Felsefe","Din","Kişisel Gelişim","Diğer"].map(g=>`<option>${g}</option>`).join("")}
 function renderLibrary(){
   const q=$("#librarySearch").value.trim().toLocaleLowerCase("tr"),g=$("#libraryGenre").value;
@@ -192,7 +196,7 @@ function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(async()=>{i
 function renderChapters(){if(!currentBook)return;$("#chaptersList").innerHTML=currentBook.chapters.map((c,i)=>`<div class="chapter-row ${i===currentChapter?"active":""}"><button data-ch="${i}">▶</button><div><strong>${esc(c.title||`Bölüm ${i+1}`)}</strong><div class="muted">${currentBook.source==="tts"?`%${Math.round((c.progress||0)*100)}`:c.duration?`${fmt(c.progress||0)} / ${fmt(c.duration)}`:"Hazır"}</div></div><span>${i+1}</span></div>`).join("");$$("[data-ch]").forEach(b=>b.onclick=()=>loadChapter(+b.dataset.ch,true))}
 function syncPlayIcons(){const playing=currentBook?(currentBook.source==="tts"?tts.playing:!audio.paused):false;$("#playBtn").textContent=playing?"❚❚":"▶";$("#miniPlay").textContent=playing?"❚❚":"▶"}
 function updateMini(){if(!currentBook){$("#miniPlayer").classList.add("hidden");return}$("#miniPlayer").classList.remove("hidden");$("#miniTitle").textContent=currentBook.title;$("#miniSubtitle").textContent=currentBook.chapters[currentChapter]?.title||"";$("#miniCover").className=`mini-cover ${currentBook.coverClass||"c1"}`;syncPlayIcons()}
-function stopPlayback(clear=true){audio.pause();speechSynthesis?.cancel?.();tts.playing=false;if(clear){currentBook=null;$("#miniPlayer").classList.add("hidden")}syncPlayIcons()}
+function stopPlayback(clear=true){audio.pause();speechSynthesis?.cancel?.();clearTimeout(quickSessionTimer);quickSessionActive=false;tts.playing=false;if(clear){currentBook=null;$("#miniPlayer").classList.add("hidden")}syncPlayIcons()}
 function revokeUrl(){if(currentObjectUrl){URL.revokeObjectURL(currentObjectUrl);currentObjectUrl=null}}
 function cycleSpeed(){if(currentBook?.source==="tts"){let v=+$("#rateRange").value+.1;if(v>1.5)v=.7;$("#rateRange").value=v;$("#rateRange").dispatchEvent(new Event("input"));$("#speedBtn").textContent=v.toFixed(1)+"×";if(tts.playing){speechSynthesis.cancel();speakNext()}}else{const s=[.75,1,1.25,1.5,1.75,2],cur=Number($("#speedBtn").dataset.speed||1),n=s[(s.indexOf(cur)+1)%s.length];$("#speedBtn").dataset.speed=n;$("#speedBtn").textContent=n+"×";audio.playbackRate=n}}
 async function toggleFavorite(){if(!currentBook)return;currentBook.favorite=!currentBook.favorite;await put(BOOKS,currentBook);$("#favBtn").textContent=currentBook.favorite?"♥ Favori":"♡ Favori";renderAll()}
@@ -204,4 +208,119 @@ function updateRateLabels(){$("#rateValue").textContent=(+$("#rateRange").value)
 function showHistory(){const rows=books.flatMap(b=>(b.history||[]).map(h=>({...h,title:b.title,id:b.id}))).sort((a,b)=>b.at-a.at).slice(0,60);$("#listModalTitle").textContent="Dinleme Geçmişi";$("#listModalBody").innerHTML=rows.length?rows.map(h=>`<div class="list-item"><div><strong>${esc(h.title)}</strong><div class="meta">${new Date(h.at).toLocaleString("tr-TR")}</div></div><div class="list-actions"><button data-h="${h.id}">Aç</button></div></div>`).join(""):`<p class="muted">Henüz geçmiş yok.</p>`;openModal("#listModal");$$("[data-h]").forEach(x=>x.onclick=()=>{closeOverlays();openBook(x.dataset.h)})}
 async function showStorage(){const f=await getAll(FILES);const local=f.reduce((s,x)=>s+(x.size||x.blob?.size||0),0);let est={};try{est=await navigator.storage?.estimate?.()||{}}catch{}$("#listModalTitle").textContent="Depolama";$("#listModalBody").innerHTML=`<div class="list-item"><div><strong>${books.length} kitap</strong><div class="meta">${f.length} yerel içerik · yaklaşık ${bytes(local)}</div>${est.usage!=null?`<div class="meta">Tarayıcı kullanımı: ${bytes(est.usage)}</div>`:""}</div></div>`;openModal("#listModal")}
 async function clearData(){if(!confirm("Tüm kitaplar, ilerleme ve ayarlar silinsin mi?"))return;stopPlayback();await clearStore(BOOKS);await clearStore(FILES);books=[];closeOverlays();renderAll();toast("Yerel veriler silindi.")}
+
+function renderKitupHome(){
+  renderForYou(false);
+  renderCollections();
+}
+function seedFromString(s){
+  let h=2166136261;
+  for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}
+  return Math.abs(h);
+}
+function personalizedCatalog(){
+  const listenedGenres=new Map();
+  books.forEach(b=>{
+    const weight=(b.lastPlayedAt?3:0)+(b.favorite?4:0)+(bookProgress(b)>25?2:0);
+    listenedGenres.set(b.genre,(listenedGenres.get(b.genre)||0)+weight);
+  });
+  const preferred=[...listenedGenres.entries()].sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  const owned=new Set(books.map(b=>b.catalogId).filter(Boolean));
+  let list=CATALOG.filter(x=>!owned.has(x.id));
+  if(preferred.length){
+    list=list.sort((a,b)=>{
+      const ai=preferred.indexOf(a.category),bi=preferred.indexOf(b.category);
+      const av=ai<0?99:ai,bv=bi<0?99:bi;
+      return av-bv;
+    });
+  }
+  return list;
+}
+function renderForYou(forceShuffle=false){
+  const pool=personalizedCatalog();
+  if(!pool.length){$("#forYouRail").innerHTML='<p class="muted">Katalogdaki tüm eserler kitaplığında.</p>';return;}
+  const day=new Date().toISOString().slice(0,10);
+  const seed=seedFromString(day+(forceShuffle?Date.now():"")+"seslikitap");
+  const arranged=pool.map((x,i)=>({x,k:(seedFromString(x.id)+seed+i*97)%10007})).sort((a,b)=>a.k-b.k).slice(0,8).map(v=>v.x);
+  $("#forYouRail").innerHTML=arranged.map(catalogCard).join("");
+  $$("#forYouRail [data-cat]").forEach(b=>b.onclick=()=>showCatalogDetail(b.dataset.cat));
+}
+function renderCollections(){
+  const collections=[
+    {title:"Bir Oturuşta",sub:"Kısa hikâyeler",cls:"col1",filter:x=>x.category==="Hikâye"},
+    {title:"Büyük Romanlar",sub:"Türk roman klasikleri",cls:"col2",filter:x=>x.category==="Roman"},
+    {title:"Düşün ve Dinle",sub:"Şiir · düşünce · gezi",cls:"col3",filter:x=>["Şiir","Düşünce","Gezi"].includes(x.category)},
+    {title:"Eski İstanbul",sub:"Toplum ve hiciv",cls:"col4",filter:x=>["Hüseyin Rahmi Gürpınar","Ahmet Mithat Efendi","Recaizade Mahmut Ekrem"].includes(x.author)}
+  ];
+  $("#collectionCards").innerHTML=collections.map((c,i)=>`<button class="collection-card ${c.cls}" data-collection="${i}"><strong>${c.title}</strong><span>${c.sub}</span></button>`).join("");
+  $$("[data-collection]").forEach(b=>b.onclick=()=>{
+    const c=collections[+b.dataset.collection];
+    selectedCatalogCategory="Tümü";
+    $("#catalogSearch").value="";
+    renderCatalog();
+    const list=CATALOG.filter(c.filter);
+    $("#featuredShelves").innerHTML=`<div class="shelf"><div class="shelf-head"><h3>${c.title}</h3></div><div class="rail">${list.map(catalogCard).join("")}</div></div>`;
+    $$("#featuredShelves [data-cat]").forEach(x=>x.onclick=()=>showCatalogDetail(x.dataset.cat));
+    $("#catalogSection").scrollIntoView({behavior:"smooth"});
+  });
+}
+function pickQuickBook(){
+  const pool=personalizedCatalog();
+  const x=pool[Math.floor(Math.random()*pool.length)]||CATALOG[Math.floor(Math.random()*CATALOG.length)];
+  $("#quickPickCard").classList.remove("hidden");
+  $("#quickPickCard").innerHTML=`<div class="quick-pick-inner"><div class="quick-mini-cover ${x.cover}"><span>${esc(x.title)}</span></div><div class="quick-copy"><strong>${esc(x.title)}</strong><span>${esc(x.author)} · 15 dakikalık başlangıç</span></div><button class="btn primary" id="startQuickPick">▶ Başlat</button></div>`;
+  $("#startQuickPick").onclick=()=>startQuickFromCatalog(x);
+}
+async function startQuickFromCatalog(x){
+  const existing=books.find(b=>b.catalogId===x.id);
+  if(existing){
+    closeOverlays();
+    await openBook(existing.id,true);
+    activateQuickTimer();
+  }else{
+    loading(true,`“${x.title}” 15 dakikalık dinleme için hazırlanıyor…`);
+    try{
+      const data=await wikiFetch(x.wiki),text=extractText(data.html);
+      if(text.length<400)throw new Error("Metin çok kısa");
+      const parts=splitBookText(text),chs=[];
+      for(let i=0;i<parts.length;i++){
+        const fid=uid();
+        await put(FILES,{id:fid,type:"text",text:parts[i],size:new Blob([parts[i]]).size});
+        chs.push({id:uid(),fileId:fid,title:`Bölüm ${i+1}`,order:i,segmentIndex:0,progress:0});
+      }
+      const b={id:uid(),catalogId:x.id,title:x.title,author:x.author,genre:x.category,coverClass:x.cover,source:"tts",wikiTitle:data.title,chapters:chs,favorite:false,lastPlayedAt:0,currentChapter:0,bookmarks:[],history:[],createdAt:Date.now()};
+      await put(BOOKS,b);books.push(b);closeOverlays();renderAll();await openBook(b.id,true);activateQuickTimer();
+    }catch(e){console.error(e);toast("Bu eser şu anda hazırlanamadı.")}
+    finally{loading(false)}
+  }
+}
+function activateQuickTimer(){
+  clearTimeout(quickSessionTimer);
+  quickSessionActive=true;
+  toast("15 dakikalık hızlı dinleme başladı.");
+  quickSessionTimer=setTimeout(()=>{
+    quickSessionActive=false;
+    if(currentBook?.source==="tts")pauseTts();else audio.pause();
+    toast("15 dakika tamamlandı. İstersen tam kitaba devam edebilirsin.");
+  },15*60*1000);
+}
+function showStats(){
+  const completed=books.filter(b=>bookProgress(b)>=98).length;
+  const started=books.filter(b=>bookProgress(b)>0).length;
+  const favorites=books.filter(b=>b.favorite).length;
+  const bookmarks=books.reduce((s,b)=>s+(b.bookmarks?.length||0),0);
+  const history=books.flatMap(b=>b.history||[]);
+  const days=new Set(history.map(h=>new Date(h.at).toISOString().slice(0,10))).size;
+  $("#listModalTitle").textContent="Dinleme İstatistiklerim";
+  $("#listModalBody").innerHTML=`<div class="stats-grid">
+    <div class="stat-box"><strong>${books.length}</strong><span>Kütüphanedeki kitap</span></div>
+    <div class="stat-box"><strong>${started}</strong><span>Başlanan kitap</span></div>
+    <div class="stat-box"><strong>${completed}</strong><span>Tamamlanan kitap</span></div>
+    <div class="stat-box"><strong>${favorites}</strong><span>Favori</span></div>
+    <div class="stat-box"><strong>${bookmarks}</strong><span>Yer imi</span></div>
+    <div class="stat-box"><strong>${days}</strong><span>Dinleme yapılan gün</span></div>
+  </div>`;
+  openModal("#listModal");
+}
+
 init().catch(e=>{console.error(e);alert("Uygulama başlatılamadı: "+e.message)})

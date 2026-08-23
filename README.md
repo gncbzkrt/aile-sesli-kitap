@@ -1,3 +1,17 @@
+# Sesli Kitaplık v4.1 — Storytel + KitUP dokunuşu
+
+Bu sürüm v4 Türkçe TTS altyapısının üzerine keşif ve alışkanlık katmanı ekler.
+
+## Yeni
+- Senin İçin rafı
+- Günlük değişen öneriler
+- 15 Dakikalık Hızlı Dinleme
+- Ruh haline/temaya göre koleksiyonlar
+- Tamamlandı rozeti
+- Dinleme istatistikleri
+- Kitap detayında 15 dakikalık başlangıç
+- Mevcut Türkçe kamu malı katalog + TTS + MP3 altyapısı korunur
+
 # Sesli Kitaplık v4 — Türkçe TTS Klasikleri
 
 ## Ana fikir

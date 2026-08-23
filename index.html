@@ -44,6 +44,39 @@
     <div id="continueRail" class="rail"></div>
   </section>
 
+  <section id="forYouSection" class="section">
+    <div class="section-head">
+      <div>
+        <div class="mini-label">SANA ÖZEL</div>
+        <h2>Senin İçin</h2>
+      </div>
+      <button id="refreshForYou" class="text-btn">Yenile ↻</button>
+    </div>
+    <div id="forYouRail" class="rail"></div>
+  </section>
+
+  <section id="quickListenSection" class="section">
+    <div class="quick-banner">
+      <div>
+        <div class="mini-label">HIZLI DİNLEME</div>
+        <h2>15 Dakikada Bir Klasiğe Başla</h2>
+        <p>Vaktin azsa kitabın ilk bölümünü 15 dakikalık bir oturumla dinle. Beğenirsen kaldığın yerden tam kitaba devam et.</p>
+      </div>
+      <button id="quickPickBtn" class="btn primary">Bana Bir Kitap Seç</button>
+    </div>
+    <div id="quickPickCard" class="quick-pick hidden"></div>
+  </section>
+
+  <section id="collectionsSection" class="section">
+    <div class="section-head">
+      <div>
+        <div class="mini-label">KOLEKSİYONLAR</div>
+        <h2>Ruh Haline Göre Seç</h2>
+      </div>
+    </div>
+    <div id="collectionCards" class="collection-grid"></div>
+  </section>
+
   <section id="catalogSection" class="section">
     <div class="section-head">
       <div>
@@ -117,6 +150,7 @@
       <span>🇹🇷 Türkçe</span><span>🔊 TTS</span><span>✓ Kamu malı</span>
     </div>
     <button id="detailAddBtn" class="btn primary full">Kitaplığıma Ekle ve Dinle</button>
+    <button id="detailQuickBtn" class="btn secondary full">⏱ 15 Dakikalık Başlangıç</button>
     <p class="source-note">Metin kaynağı: Türkçe Vikikaynak. İlk eklemede internet gerekir; metin cihazına kaydedilir.</p>
   </div>
 </div>
@@ -181,6 +215,7 @@
     <hr>
     <label class="toggle-row"><span>Koyu tema</span><input id="darkToggle" type="checkbox" checked></label>
     <button id="historyBtn" class="btn secondary full">Dinleme Geçmişi</button>
+    <button id="statsBtn" class="btn secondary full">Dinleme İstatistiklerim</button>
     <button id="storageBtn" class="btn secondary full">Depolama Kullanımı</button>
     <button id="clearBtn" class="btn danger full">Tüm Yerel Verileri Sil</button>
     <p class="source-note">TTS sesleri telefonunda yüklü olan sistem seslerinden gelir. Ses seçenekleri Android ve iPhone modeline göre değişebilir.</p>
