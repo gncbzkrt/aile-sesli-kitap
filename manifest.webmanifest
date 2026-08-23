@@ -1,12 +1,12 @@
 {
-  "name": "Aile Sesli Kitaplığı",
-  "short_name": "Sesli Kitaplık",
-  "description": "Cihaz bazlı, çevrimdışı çalışan ücretsiz kişisel sesli kitap PWA uygulaması.",
+  "name": "Sesli Kitaplık",
+  "short_name": "Kitaplık",
+  "description": "Türkçe kamu malı eserleri cihaz içi TTS ile dinlemeye yönelik ücretsiz PWA.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0b1220",
-  "theme_color": "#111827",
+  "background_color": "#090d14",
+  "theme_color": "#090d14",
   "lang": "tr",
   "icons": [
     {

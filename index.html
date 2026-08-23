@@ -1,189 +1,202 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#111827" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Aile Kitaplığı" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="icons/icon-192.svg" />
-  <link rel="icon" href="icons/icon-192.svg" />
-  <link rel="stylesheet" href="styles.css" />
-  <title>Aile Sesli Kitaplığı</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0a0d14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sesli Kitaplık">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="styles.css">
+  <title>Sesli Kitaplık</title>
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <div class="eyebrow">AİLE İÇİ · ÇEVRİMDIŞI</div>
-      <h1>Sesli Kitaplık</h1>
-    </div>
-    <button id="installBtn" class="ghost hidden">Uygulamayı Kur</button>
-  </header>
-
-  <main>
-    <section id="continueSection" class="section hidden">
-      <div class="section-title-row">
-        <h2>Dinlemeye devam et</h2>
-      </div>
-      <div id="continueCard"></div>
-    </section>
-
-    <section class="section catalog-section">
-      <div class="section-title-row">
-        <div><h2>Ücretsiz Katalog</h2><p class="muted small">LibriVox kamu malı sesli kitapları · internet bağlantısı gerekir</p></div>
-      </div>
-      <div class="catalog-toolbar">
-        <input id="catalogSearch" type="search" placeholder="Ücretsiz kitap ara… (İngilizce başlık/yazar)" />
-        <button id="catalogSearchBtn" class="primary">Ara</button>
-      </div>
-      <div id="catalogFeatured" class="book-grid"></div>
-      <div id="catalogResults" class="book-grid"></div>
-      <p id="catalogStatus" class="muted small"></p>
-    </section>
-
-    <section class="section">
-      <div class="section-title-row">
-        <h2>Kütüphane</h2>
-        <button id="addBookBtn" class="primary">+ Kitap ekle</button>
-      </div>
-
-      <div class="toolbar">
-        <input id="searchInput" type="search" placeholder="Kitap veya yazar ara…" />
-        <select id="genreFilter">
-          <option value="">Tüm türler</option>
-        </select>
-      </div>
-
-      <div id="genreChips" class="chips"></div>
-      <div id="library" class="book-grid"></div>
-      <div id="emptyState" class="empty hidden">
-        <div class="empty-icon">🎧</div>
-        <h3>Henüz kitap yok</h3>
-        <p>İlk sesli kitabınızı ekleyin. Dosyalar cihazınızda tutulur.</p>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-title-row"><h2>Favoriler</h2></div>
-      <div id="favorites" class="book-grid compact"></div>
-    </section>
-  </main>
-
-  <nav class="bottom-nav">
-    <button data-scroll="top" class="active">⌂<span>Ana Sayfa</span></button>
-    <button id="navLibrary">▦<span>Kütüphane</span></button>
-    <button id="navFavorites">♥<span>Favoriler</span></button>
-    <button id="navSettings">⚙<span>Ayarlar</span></button>
-  </nav>
-
-  <div id="playerSheet" class="sheet hidden" aria-hidden="true">
-    <div class="sheet-handle"></div>
-    <button id="closePlayer" class="sheet-close">×</button>
-    <div class="player-cover-wrap">
-      <img id="playerCover" class="player-cover" alt="" />
-    </div>
-    <div class="player-meta">
-      <div id="playerGenre" class="eyebrow"></div>
-      <h2 id="playerTitle"></h2>
-      <p id="playerAuthor"></p>
-      <p id="playerChapter" class="chapter-title"></p>
-    </div>
-
-    <input id="seek" class="seek" type="range" min="0" max="100" value="0" step="0.1" />
-    <div class="time-row">
-      <span id="currentTime">00:00</span>
-      <span id="duration">00:00</span>
-    </div>
-
-    <div class="player-controls">
-      <button id="prevChapter" title="Önceki bölüm">⏮</button>
-      <button id="rewind" title="15 saniye geri">↶<small>15</small></button>
-      <button id="playPause" class="play">▶</button>
-      <button id="forward" title="15 saniye ileri">↷<small>15</small></button>
-      <button id="nextChapter" title="Sonraki bölüm">⏭</button>
-    </div>
-
-    <div class="player-options">
-      <button id="speedBtn">1× Hız</button>
-      <button id="bookmarkBtn">🔖 Yer imi</button>
-      <button id="showBookmarksBtn">📌 Yer imleri</button>
-      <button id="sleepBtn">🌙 Uyku</button>
-      <button id="favoriteBtn">♡ Favori</button>
-    </div>
-
-    <div class="chapters-panel">
-      <h3>Bölümler</h3>
-      <div id="chaptersList"></div>
-    </div>
+<header class="app-header">
+  <div>
+    <div class="brand-kicker">TÜRKÇE · ÜCRETSİZ · REKLAMSIZ</div>
+    <div class="brand">Sesli Kitaplık</div>
   </div>
+  <button id="installBtn" class="round-btn hidden" title="Uygulamayı kur">↓</button>
+</header>
 
-  <div id="modalBackdrop" class="modal-backdrop hidden"></div>
-
-  <div id="addBookModal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h2>Kitap ekle</h2>
-        <button class="modal-close" data-close-modal>×</button>
+<main>
+  <section id="hero" class="hero">
+    <div class="hero-copy">
+      <span class="pill">Türk Klasikleri</span>
+      <h1>Bir kitap seç.<br>Telefonun sana okusun.</h1>
+      <p>Kamu malı Türkçe eserler, cihazındaki Türkçe seslerle okunur. İndirdiğin metin daha sonra çevrimdışı da kullanılabilir.</p>
+      <div class="hero-actions">
+        <button id="heroExplore" class="btn primary">Kataloğu Keşfet</button>
+        <button id="heroContinue" class="btn secondary hidden">▶ Devam Et</button>
       </div>
-      <p class="muted">Ses dosyalarını bölüm sırasına göre seçin. MP3, M4A, AAC, WAV ve tarayıcının desteklediği diğer ses biçimleri kullanılabilir.</p>
-      <label>Kitap adı<input id="bookTitleInput" /></label>
-      <label>Yazar<input id="bookAuthorInput" /></label>
-      <label>Tür
-        <select id="bookGenreInput">
-          <option>Roman</option>
-          <option>Klasik</option>
-          <option>Tarih</option>
-          <option>Bilim</option>
-          <option>Felsefe</option>
-          <option>Çocuk</option>
-          <option>Din</option>
-          <option>Kişisel Gelişim</option>
-          <option>Diğer</option>
-        </select>
-      </label>
-      <label>Kapak resmi (isteğe bağlı)<input id="coverInput" type="file" accept="image/*" /></label>
-      <label>Ses bölümleri<input id="audioInput" type="file" accept="audio/*" multiple /></label>
-      <button id="saveBookBtn" class="primary full">Kitabı kaydet</button>
     </div>
-  </div>
+    <div class="hero-art">
+      <div class="hero-book b1">Aşk-ı<br>Memnu</div>
+      <div class="hero-book b2">Pembe<br>İncili<br>Kaftan</div>
+      <div class="hero-book b3">Araba<br>Sevdası</div>
+    </div>
+  </section>
 
-  <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h2>Ayarlar</h2>
-        <button class="modal-close" data-close-modal>×</button>
+  <section id="continueSection" class="section hidden">
+    <div class="section-head"><h2>Dinlemeye devam et</h2></div>
+    <div id="continueRail" class="rail"></div>
+  </section>
+
+  <section id="catalogSection" class="section">
+    <div class="section-head">
+      <div>
+        <div class="mini-label">KEŞFET</div>
+        <h2>Türkçe Ücretsiz Kütüphane</h2>
       </div>
-      <label class="toggle-row">
-        <span>Koyu tema</span>
-        <input id="darkModeToggle" type="checkbox" checked />
-      </label>
-      <button id="manageGenresBtn" class="ghost full">Türleri yönet</button>
-      <button id="showHistoryBtn" class="ghost full">Dinleme geçmişi</button>
-      <button id="showStorageBtn" class="ghost full">Depolama kullanımı</button>
-      <button id="exportBtn" class="ghost full">Yedekleme bilgisi</button>
-      <button id="clearBtn" class="danger full">Tüm yerel verileri sil</button>
-      <p class="muted small">Not: Ses dosyaları cihazın tarayıcı depolamasında saklanır. Tarayıcı verileri silinirse kitaplar da silinebilir.</p>
     </div>
+
+    <div class="search-row">
+      <input id="catalogSearch" type="search" placeholder="Eser veya yazar ara…">
+      <button id="catalogSearchBtn" class="btn primary">Ara</button>
+    </div>
+    <div id="categoryChips" class="chips"></div>
+
+    <div id="featuredShelves"></div>
+  </section>
+
+  <section id="myLibrarySection" class="section">
+    <div class="section-head">
+      <div>
+        <div class="mini-label">SENİN CİHAZIN</div>
+        <h2>Kütüphanem</h2>
+      </div>
+      <button id="addBookBtn" class="btn primary small-btn">+ Ses Dosyası</button>
+    </div>
+    <div class="search-row library-search">
+      <input id="librarySearch" type="search" placeholder="Kütüphanemde ara…">
+      <select id="libraryGenre"><option value="">Tüm türler</option></select>
+    </div>
+    <div id="libraryGrid" class="library-grid"></div>
+    <div id="libraryEmpty" class="empty hidden">
+      <div class="empty-icon">🎧</div>
+      <h3>Kütüphanen boş</h3>
+      <p>Yukarıdaki Türkçe katalogdan bir eser seçebilir veya kendi ses dosyanı ekleyebilirsin.</p>
+    </div>
+  </section>
+
+  <section id="favoritesSection" class="section">
+    <div class="section-head"><h2>Favoriler</h2></div>
+    <div id="favoritesRail" class="rail"></div>
+  </section>
+</main>
+
+<div id="miniPlayer" class="mini-player hidden">
+  <button id="miniOpen" class="mini-main">
+    <div id="miniCover" class="mini-cover">🎧</div>
+    <div class="mini-meta"><strong id="miniTitle"></strong><span id="miniSubtitle"></span></div>
+  </button>
+  <button id="miniPlay" class="mini-play">▶</button>
+</div>
+
+<nav class="bottom-nav">
+  <button class="active" data-nav="home"><span>⌂</span><small>Ana Sayfa</small></button>
+  <button data-nav="discover"><span>◫</span><small>Keşfet</small></button>
+  <button data-nav="library"><span>▦</span><small>Kütüphane</small></button>
+  <button data-nav="settings"><span>⚙</span><small>Ayarlar</small></button>
+</nav>
+
+<div id="backdrop" class="backdrop hidden"></div>
+
+<!-- Catalog detail -->
+<div id="detailSheet" class="sheet hidden">
+  <button class="sheet-close" data-close>×</button>
+  <div id="detailCover" class="detail-cover"></div>
+  <div class="detail-content">
+    <div id="detailCategory" class="mini-label"></div>
+    <h2 id="detailTitle"></h2>
+    <p id="detailAuthor" class="detail-author"></p>
+    <p id="detailDesc" class="detail-desc"></p>
+    <div class="detail-badges">
+      <span>🇹🇷 Türkçe</span><span>🔊 TTS</span><span>✓ Kamu malı</span>
+    </div>
+    <button id="detailAddBtn" class="btn primary full">Kitaplığıma Ekle ve Dinle</button>
+    <p class="source-note">Metin kaynağı: Türkçe Vikikaynak. İlk eklemede internet gerekir; metin cihazına kaydedilir.</p>
   </div>
+</div>
 
-
-  <div id="editBookModal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modal-card"><div class="modal-head"><h2>Kitabı düzenle</h2><button class="modal-close" data-close-modal>×</button></div>
-      <input id="editBookId" type="hidden" />
-      <label>Kitap adı<input id="editTitleInput" /></label><label>Yazar<input id="editAuthorInput" /></label>
-      <label>Tür<select id="editGenreInput"></select></label><label>Kapak resmi<input id="editCoverInput" type="file" accept="image/*" /></label>
-      <button id="saveEditBookBtn" class="primary full">Değişiklikleri kaydet</button></div>
+<!-- Player -->
+<div id="playerSheet" class="sheet player-sheet hidden">
+  <button class="sheet-close" data-close-player>×</button>
+  <div id="playerBigCover" class="player-big-cover"></div>
+  <div class="player-info">
+    <div id="playerMode" class="mini-label"></div>
+    <h2 id="playerTitle"></h2>
+    <p id="playerAuthor"></p>
+    <p id="playerChapter" class="chapter-name"></p>
   </div>
-  <div id="genresModal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><div class="modal-head"><h2>Türleri yönet</h2><button class="modal-close" data-close-modal>×</button></div><div class="inline-form"><input id="newGenreInput" placeholder="Yeni tür adı"/><button id="addGenreBtn" class="primary">Ekle</button></div><div id="genreManageList" class="manage-list"></div></div></div>
-  <div id="bookmarksModal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><div class="modal-head"><h2>Yer imleri</h2><button class="modal-close" data-close-modal>×</button></div><div id="bookmarksList" class="manage-list"></div></div></div>
-  <div id="historyModal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><div class="modal-head"><h2>Dinleme geçmişi</h2><button class="modal-close" data-close-modal>×</button></div><div id="historyList" class="manage-list"></div></div></div>
-  <div id="storageModal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><div class="modal-head"><h2>Depolama</h2><button class="modal-close" data-close-modal>×</button></div><div id="storageInfo" class="storage-card"></div></div></div>
+  <div class="progress-wrap">
+    <input id="progressRange" type="range" min="0" max="100" value="0" step="0.1">
+    <div class="progress-labels"><span id="progressLeft">0%</span><span id="progressRight">100%</span></div>
+  </div>
+  <div class="player-controls">
+    <button id="prevBtn">⏮</button>
+    <button id="backBtn">↶<small id="backLabel">15</small></button>
+    <button id="playBtn" class="big-play">▶</button>
+    <button id="forwardBtn">↷<small id="forwardLabel">15</small></button>
+    <button id="nextBtn">⏭</button>
+  </div>
+  <div class="player-tools">
+    <button id="speedBtn">1×</button>
+    <button id="bookmarkBtn">🔖 Yer imi</button>
+    <button id="bookmarksBtn">📌 Yer imleri</button>
+    <button id="sleepBtn">🌙 Uyku</button>
+    <button id="favBtn">♡ Favori</button>
+  </div>
+  <div class="chapters-box">
+    <div class="section-head"><h3>Bölümler</h3></div>
+    <div id="chaptersList"></div>
+  </div>
+</div>
 
-  <div id="toast" class="toast hidden"></div>
-  <audio id="audio" preload="metadata"></audio>
+<!-- Add audio -->
+<div id="addModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head"><h2>Ses dosyası ekle</h2><button data-close>×</button></div>
+    <p class="muted">MP3/M4A gibi kendi ses dosyalarını da kullanabilirsin.</p>
+    <label>Kitap adı<input id="addTitle"></label>
+    <label>Yazar<input id="addAuthor"></label>
+    <label>Tür<select id="addGenre"></select></label>
+    <label>Kapak<input id="addCover" type="file" accept="image/*"></label>
+    <label>Ses bölümleri<input id="addAudio" type="file" accept="audio/*" multiple></label>
+    <button id="saveAudioBook" class="btn primary full">Kitabı Kaydet</button>
+  </div>
+</div>
 
-  <script src="app.js" defer></script>
+<!-- Settings -->
+<div id="settingsModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head"><h2>Ayarlar</h2><button data-close>×</button></div>
+    <h3 class="settings-title">Türkçe TTS sesi</h3>
+    <label>Ses<select id="voiceSelect"></select></label>
+    <label>Okuma hızı <span id="rateValue">1.00×</span><input id="rateRange" type="range" min="0.65" max="1.55" step="0.05" value="1"></label>
+    <label>Ses perdesi <span id="pitchValue">1.00</span><input id="pitchRange" type="range" min="0.7" max="1.3" step="0.05" value="1"></label>
+    <button id="testVoiceBtn" class="btn secondary full">▶ Sesi Dene</button>
+    <hr>
+    <label class="toggle-row"><span>Koyu tema</span><input id="darkToggle" type="checkbox" checked></label>
+    <button id="historyBtn" class="btn secondary full">Dinleme Geçmişi</button>
+    <button id="storageBtn" class="btn secondary full">Depolama Kullanımı</button>
+    <button id="clearBtn" class="btn danger full">Tüm Yerel Verileri Sil</button>
+    <p class="source-note">TTS sesleri telefonunda yüklü olan sistem seslerinden gelir. Ses seçenekleri Android ve iPhone modeline göre değişebilir.</p>
+  </div>
+</div>
+
+<div id="listModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head"><h2 id="listModalTitle"></h2><button data-close>×</button></div>
+    <div id="listModalBody" class="list-body"></div>
+  </div>
+</div>
+
+<div id="loading" class="loading hidden"><div class="spinner"></div><strong id="loadingText">Hazırlanıyor…</strong></div>
+<div id="toast" class="toast hidden"></div>
+<audio id="audio" preload="metadata"></audio>
+<script src="app.js" defer></script>
 </body>
 </html>

@@ -1,16 +1,33 @@
-# Aile Sesli Kitaplığı PWA v3.1
+# Sesli Kitaplık v4 — Türkçe TTS Klasikleri
 
-Katalog bağlantısı düzeltildi; JSON + JSONP yedekli erişim ve otomatik öne çıkan kitap yükleme eklendi.
+## Ana fikir
+Storytel benzeri keşif/kütüphane deneyimi; ancak abonelik, reklam veya hesap yoktur.
+Uygulama yalnız Türkçe içerik gösterir.
 
-# Aile Sesli Kitaplığı PWA v3
+## İçerik
+- Başlangıç kataloğunda 40+ Türkçe kamu malı klasik eser
+- Metin kaynağı: Türkçe Vikikaynak
+- İlk "Kitaplığıma Ekle" işleminde metin MediaWiki API üzerinden alınır
+- Metin IndexedDB'de cihazda saklanır
+- Sonraki okumalar çevrimdışı yapılabilir (seçilen TTS sesi cihazda mevcutsa)
+- Kendi MP3/M4A kitaplarını ekleme özelliği korunur
 
-## Yeni: Ücretsiz Katalog
-LibriVox kamu malı sesli kitap kataloğu uygulamaya bağlandı. Öne çıkan ücretsiz kitapları tek dokunuşla kişisel cihaz kütüphanesine ekleyebilir ve internetten dinleyebilirsiniz. Kendi ses dosyalarınızı ekleme özelliği aynen devam eder. Ortak aile kütüphanesi veya kullanıcı hesabı yoktur.
+## TTS
+- Cihazdaki Türkçe SpeechSynthesis seslerini listeler
+- Ses seçimi
+- Hız
+- Perde
+- Ses testi
+- Bölüm ve ilerleme kaydı
+- Yer imi
+- Uyku zamanlayıcısı
 
-# Aile Sesli Kitaplığı PWA v2
+## Önemli sınırlama
+Web Speech / cihaz TTS davranışı tarayıcıya bağlıdır. Özellikle iOS'ta ekran kilitlendiğinde veya PWA uzun süre arka planda kaldığında TTS durabilir. Normal ses dosyaları arka planda daha tutarlı çalışır.
 
-Her kullanıcı kendi telefonunda bağımsız çalışır. Ortak hesap, ortak kitaplık ve bulut senkronizasyonu yoktur.
+## Telif
+Katalog, kamu malı olduğu bilinen klasik yazarlara ve Vikikaynak metinlerine odaklanır.
+TRT Dinle vb. servislerin ses kayıtları, açık yeniden kullanım/embedding izni doğrulanmadan uygulamaya çekilmez.
 
-Yeni özellikler: kitap düzenleme, özel tür yönetimi, yer imi listesi ve yer imine gitme, dinleme geçmişi, depolama kullanımı, gelişmiş uyku zamanlayıcısı. Mevcut v1 özellikleri korunur.
-
-PWA için HTTPS üzerinden yayınlayın. Android: Chrome > Uygulamayı yükle. iPhone/iPad: Safari > Paylaş > Ana Ekrana Ekle.
+## GitHub Pages güncelleme
+Bu klasörün içeriğini mevcut repo köküne yükleyip aynı isimli dosyaları değiştirin.
