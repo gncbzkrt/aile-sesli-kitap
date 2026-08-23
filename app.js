@@ -21,24 +21,58 @@ let customGenres=[];
 const FEATURED_LIBRIVOX_IDS=[47,65,74];
 let catalogCache=new Map();
 
+async function fetchJson(url){
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(), 12000);
+  try{
+    const r = await fetch(url, {signal:controller.signal, mode:"cors", cache:"no-store"});
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } finally { clearTimeout(timer); }
+}
+
 function jsonp(url){
   return new Promise((resolve,reject)=>{
     const cb='lv_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
     const s=document.createElement('script');
     const timer=setTimeout(()=>{cleanup();reject(new Error('Katalog zaman aşımı'));},15000);
-    function cleanup(){clearTimeout(timer);delete window[cb];s.remove();}
+    function cleanup(){clearTimeout(timer);try{delete window[cb]}catch{};s.remove();}
     window[cb]=(data)=>{cleanup();resolve(data);};
-    s.onerror=()=>{cleanup();reject(new Error('Katalog bağlantısı kurulamadı'));};
-    s.src=url+(url.includes('?')?'&':'?')+'format=jsonp&callback='+encodeURIComponent(cb);
+    s.onerror=()=>{cleanup();reject(new Error('JSONP bağlantısı kurulamadı'));};
+    const sep=url.includes('?')?'&':'?';
+    s.src=url+sep+'format=jsonp&callback='+encodeURIComponent(cb);
     document.head.appendChild(s);
   });
 }
+
+async function lvRequest(path, params={}){
+  const cleanPath=String(path||'').replace(/^\/+|\/+$/g,'');
+  const qs=new URLSearchParams({...params, format:'json'});
+  const jsonUrl=`https://librivox.org/api/feed/audiobooks/${cleanPath?cleanPath+'/':''}?${qs.toString()}`;
+  try{
+    return await fetchJson(jsonUrl);
+  }catch(fetchErr){
+    const p=new URLSearchParams(params);
+    const jsonpUrl=`https://librivox.org/api/feed/audiobooks/${cleanPath?cleanPath+'/':''}?${p.toString()}`;
+    try{
+      return await jsonp(jsonpUrl);
+    }catch(jsonpErr){
+      console.error('LibriVox erişim hatası', {fetchErr,jsonpErr,jsonUrl,jsonpUrl});
+      throw new Error('LibriVox kataloğuna bağlanılamadı');
+    }
+  }
+}
+
 function lvAuthor(b){
   const a=(b.authors||[])[0]; return a?[a.first_name,a.last_name].filter(Boolean).join(' '):'Bilinmeyen yazar';
 }
 function lvGenre(b){
   const n=(b.genres||[])[0]?.name||'Klasik';
-  if(/children/i.test(n)) return 'Çocuk'; if(/history/i.test(n)) return 'Tarih'; if(/philos/i.test(n)) return 'Felsefe'; return 'Klasik';
+  if(/children/i.test(n)) return 'Çocuk';
+  if(/history/i.test(n)) return 'Tarih';
+  if(/philos/i.test(n)) return 'Felsefe';
+  if(/fiction|novel/i.test(n)) return 'Roman';
+  return 'Klasik';
 }
 function lvCard(b){
   const cover=b.coverart_jpg||b.coverart_thumbnail||'';
@@ -47,39 +81,70 @@ function lvCard(b){
 }
 async function fetchLvBook(id){
   if(catalogCache.has(String(id)) && catalogCache.get(String(id)).sections) return catalogCache.get(String(id));
-  const d=await jsonp(`https://librivox.org/api/feed/audiobooks/?id=${encodeURIComponent(id)}&extended=1&coverart=1`);
-  const b=d?.books?.[0]; if(!b) throw new Error('Kitap bulunamadı'); catalogCache.set(String(b.id),b); return b;
+  const d=await lvRequest(`id/${encodeURIComponent(id)}`, {extended:'1',coverart:'1'});
+  const b=d?.books?.[0];
+  if(!b) throw new Error('Kitap bulunamadı');
+  catalogCache.set(String(b.id),b);
+  return b;
 }
 async function loadFeaturedCatalog(){
-  const box=$('#catalogFeatured'),status=$('#catalogStatus'); if(!box) return;
+  const box=$('#catalogFeatured'),status=$('#catalogStatus');
+  if(!box) return;
   status.textContent='Ücretsiz kitaplar yükleniyor…';
   try{
-    const arr=[]; for(const id of FEATURED_LIBRIVOX_IDS){arr.push(await fetchLvBook(id));}
-    box.innerHTML=arr.map(lvCard).join(''); wireCatalog(); status.textContent='';
-  }catch(e){status.textContent='Katalog şu anda yüklenemedi. İnternet bağlantını kontrol et.';}
+    const d=await lvRequest('', {limit:'6',extended:'1',coverart:'1'});
+    const arr=(d?.books||[]).slice(0,6);
+    arr.forEach(b=>catalogCache.set(String(b.id),b));
+    box.innerHTML=arr.length?arr.map(lvCard).join(''):'';
+    wireCatalog();
+    status.textContent=arr.length?'':'Şu anda öne çıkan kitap alınamadı.';
+  }catch(e){
+    console.error(e);
+    status.textContent='Katalog bağlantısı kurulamadı. Arama kutusundan tekrar deneyebilirsin.';
+  }
 }
 async function searchCatalog(){
   const q=$('#catalogSearch').value.trim(),out=$('#catalogResults'),status=$('#catalogStatus');
   if(!q){out.innerHTML='';status.textContent='Aramak için kitap adı veya yazar yaz.';return;}
   status.textContent='Aranıyor…';out.innerHTML='';
   try{
-    const d=await jsonp(`https://librivox.org/api/feed/audiobooks/?title=${encodeURIComponent(q)}&limit=12&extended=1&coverart=1`);
-    const arr=d?.books||[]; arr.forEach(b=>catalogCache.set(String(b.id),b));
-    out.innerHTML=arr.length?arr.map(lvCard).join(''):'<p class="muted">Sonuç bulunamadı.</p>'; wireCatalog(); status.textContent='';
-  }catch(e){status.textContent='Arama yapılamadı.';}
+    let d=await lvRequest(`title/${encodeURIComponent(q)}`, {limit:'12',extended:'1',coverart:'1'});
+    let arr=d?.books||[];
+    if(!arr.length){
+      d=await lvRequest(`author/${encodeURIComponent(q)}`, {limit:'12',extended:'1',coverart:'1'});
+      arr=d?.books||[];
+    }
+    arr.forEach(b=>catalogCache.set(String(b.id),b));
+    out.innerHTML=arr.length?arr.map(lvCard).join(''):'<p class="muted">Sonuç bulunamadı. İngilizce kitap adı veya yazar soyadı deneyebilirsin.</p>';
+    wireCatalog(); status.textContent='';
+  }catch(e){
+    console.error(e);
+    status.textContent='Katalog servisine ulaşılamadı. Birkaç saniye sonra tekrar dene.';
+  }
 }
 function wireCatalog(){document.querySelectorAll('[data-lvadd]').forEach(btn=>btn.onclick=()=>addLibriVoxBook(btn.dataset.lvadd,btn));}
 async function addLibriVoxBook(id,btn){
   if(books.some(b=>String(b.sourceId)===String(id)&&b.source==='librivox')){toast('Bu kitap zaten kütüphanende.');return;}
   const old=btn.textContent;btn.disabled=true;btn.textContent='Ekleniyor…';
   try{
-    const b=await fetchLvBook(id); const sections=b.sections||[]; if(!sections.length) throw new Error('Bölüm yok');
-    const book={id:uid(),title:b.title,author:lvAuthor(b),genre:lvGenre(b),cover:b.coverart_jpg||b.coverart_thumbnail||null,chapters:sections.map((s,i)=>({id:uid(),remoteUrl:s.listen_url,title:s.title||`Bölüm ${i+1}`,order:i,progress:0,duration:Number(s.playtime)||0})),favorite:false,lastPlayedAt:0,currentChapter:0,bookmarks:[],history:[],createdAt:Date.now(),source:'librivox',sourceId:String(b.id),sourceUrl:b.url_librivox||'',language:b.language||''};
+    const b=await fetchLvBook(id);
+    const sections=b.sections||[];
+    if(!sections.length) throw new Error('Bölüm yok');
+    const book={
+      id:uid(),title:b.title,author:lvAuthor(b),genre:lvGenre(b),
+      cover:b.coverart_jpg||b.coverart_thumbnail||null,
+      chapters:sections.map((s,i)=>({
+        id:uid(),remoteUrl:s.listen_url,title:s.title||`Bölüm ${i+1}`,
+        order:i,progress:0,duration:Number(s.playtime)||0
+      })),
+      favorite:false,lastPlayedAt:0,currentChapter:0,bookmarks:[],history:[],
+      createdAt:Date.now(),source:'librivox',sourceId:String(b.id),
+      sourceUrl:b.url_librivox||'',language:b.language||''
+    };
     await put(BOOKS,book);books.push(book);render();toast('Ücretsiz kitap kütüphanene eklendi.');
   }catch(e){console.error(e);toast('Kitap eklenemedi.');}
   finally{btn.disabled=false;btn.textContent=old;}
 }
-
 
 function uid(){ return crypto.randomUUID ? crypto.randomUUID() : Date.now()+"-"+Math.random().toString(16).slice(2); }
 function fmt(sec){
@@ -122,6 +187,7 @@ async function init(){
   bind();
   populateGenreSelects();
   render();
+  loadFeaturedCatalog();
   if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
 }
 

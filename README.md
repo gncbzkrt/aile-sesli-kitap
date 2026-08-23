@@ -1,3 +1,7 @@
+# Aile Sesli Kitaplığı PWA v3.1
+
+Katalog bağlantısı düzeltildi; JSON + JSONP yedekli erişim ve otomatik öne çıkan kitap yükleme eklendi.
+
 # Aile Sesli Kitaplığı PWA v3
 
 ## Yeni: Ücretsiz Katalog
