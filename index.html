@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Aile Kitaplığı" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.svg" />
+  <link rel="icon" href="icons/icon-192.svg" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Aile Sesli Kitaplığı</title>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">AİLE İÇİ · ÇEVRİMDIŞI</div>
+      <h1>Sesli Kitaplık</h1>
+    </div>
+    <button id="installBtn" class="ghost hidden">Uygulamayı Kur</button>
+  </header>
+
+  <main>
+    <section id="continueSection" class="section hidden">
+      <div class="section-title-row">
+        <h2>Dinlemeye devam et</h2>
+      </div>
+      <div id="continueCard"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-title-row">
+        <h2>Kütüphane</h2>
+        <button id="addBookBtn" class="primary">+ Kitap ekle</button>
+      </div>
+
+      <div class="toolbar">
+        <input id="searchInput" type="search" placeholder="Kitap veya yazar ara…" />
+        <select id="genreFilter">
+          <option value="">Tüm türler</option>
+        </select>
+      </div>
+
+      <div id="genreChips" class="chips"></div>
+      <div id="library" class="book-grid"></div>
+      <div id="emptyState" class="empty hidden">
+        <div class="empty-icon">🎧</div>
+        <h3>Henüz kitap yok</h3>
+        <p>İlk sesli kitabınızı ekleyin. Dosyalar cihazınızda tutulur.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-title-row"><h2>Favoriler</h2></div>
+      <div id="favorites" class="book-grid compact"></div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button data-scroll="top" class="active">⌂<span>Ana Sayfa</span></button>
+    <button id="navLibrary">▦<span>Kütüphane</span></button>
+    <button id="navFavorites">♥<span>Favoriler</span></button>
+    <button id="navSettings">⚙<span>Ayarlar</span></button>
+  </nav>
+
+  <div id="playerSheet" class="sheet hidden" aria-hidden="true">
+    <div class="sheet-handle"></div>
+    <button id="closePlayer" class="sheet-close">×</button>
+    <div class="player-cover-wrap">
+      <img id="playerCover" class="player-cover" alt="" />
+    </div>
+    <div class="player-meta">
+      <div id="playerGenre" class="eyebrow"></div>
+      <h2 id="playerTitle"></h2>
+      <p id="playerAuthor"></p>
+      <p id="playerChapter" class="chapter-title"></p>
+    </div>
+
+    <input id="seek" class="seek" type="range" min="0" max="100" value="0" step="0.1" />
+    <div class="time-row">
+      <span id="currentTime">00:00</span>
+      <span id="duration">00:00</span>
+    </div>
+
+    <div class="player-controls">
+      <button id="prevChapter" title="Önceki bölüm">⏮</button>
+      <button id="rewind" title="15 saniye geri">↶<small>15</small></button>
+      <button id="playPause" class="play">▶</button>
+      <button id="forward" title="15 saniye ileri">↷<small>15</small></button>
+      <button id="nextChapter" title="Sonraki bölüm">⏭</button>
+    </div>
+
+    <div class="player-options">
+      <button id="speedBtn">1× Hız</button>
+      <button id="bookmarkBtn">🔖 Yer imi</button>
+      <button id="sleepBtn">🌙 Uyku</button>
+      <button id="favoriteBtn">♡ Favori</button>
+    </div>
+
+    <div class="chapters-panel">
+      <h3>Bölümler</h3>
+      <div id="chaptersList"></div>
+    </div>
+  </div>
+
+  <div id="modalBackdrop" class="modal-backdrop hidden"></div>
+
+  <div id="addBookModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>Kitap ekle</h2>
+        <button class="modal-close" data-close-modal>×</button>
+      </div>
+      <p class="muted">Ses dosyalarını bölüm sırasına göre seçin. MP3, M4A, AAC, WAV ve tarayıcının desteklediği diğer ses biçimleri kullanılabilir.</p>
+      <label>Kitap adı<input id="bookTitleInput" /></label>
+      <label>Yazar<input id="bookAuthorInput" /></label>
+      <label>Tür
+        <select id="bookGenreInput">
+          <option>Roman</option>
+          <option>Klasik</option>
+          <option>Tarih</option>
+          <option>Bilim</option>
+          <option>Felsefe</option>
+          <option>Çocuk</option>
+          <option>Din</option>
+          <option>Kişisel Gelişim</option>
+          <option>Diğer</option>
+        </select>
+      </label>
+      <label>Kapak resmi (isteğe bağlı)<input id="coverInput" type="file" accept="image/*" /></label>
+      <label>Ses bölümleri<input id="audioInput" type="file" accept="audio/*" multiple /></label>
+      <button id="saveBookBtn" class="primary full">Kitabı kaydet</button>
+    </div>
+  </div>
+
+  <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>Ayarlar</h2>
+        <button class="modal-close" data-close-modal>×</button>
+      </div>
+      <label class="toggle-row">
+        <span>Koyu tema</span>
+        <input id="darkModeToggle" type="checkbox" checked />
+      </label>
+      <button id="exportBtn" class="ghost full">Kütüphane yedeği bilgisi</button>
+      <button id="clearBtn" class="danger full">Tüm yerel verileri sil</button>
+      <p class="muted small">Not: Ses dosyaları cihazın tarayıcı depolamasında saklanır. Tarayıcı verileri silinirse kitaplar da silinebilir.</p>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <audio id="audio" preload="metadata"></audio>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
