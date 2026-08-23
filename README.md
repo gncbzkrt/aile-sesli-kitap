@@ -1,3 +1,57 @@
+# Sesli Kitaplık v5.0 LTS FROZEN
+
+Bu sürüm kaynak mimarisi tamamlanmış ve dondurulmuş sürümdür.
+
+## Kaynak katmanları
+1. **Türkçe Vikikaynak – kamu malı**: dinamik kategori, tam metin TTS.
+2. **Türkçe Vikikaynak – yayımı serbest**: dinamik kategori, tam metin TTS.
+3. **Open Library**: yalnız Türkçe + `ebook_access:public` + tam metin sonucu; arama bazında, düşük hacimli API kullanımı.
+4. **Project Gutenberg / Gutendex**: yalnız Türkçe dil filtresi; bulunan açık metinler cihaz içi TTS kitabına dönüşür.
+5. **Kendi dosyaların**: EPUB / PDF / TXT ve MP3/M4A/AAC/WAV, tamamen cihaz içi.
+
+## LTS kuralları
+- Yabancı dil katalog ana yüzeye alınmaz.
+- Telifli kapalı tam metin otomatik çekilmez.
+- Kaynaklar bulk olarak kopyalanmaz; dinamik veya kullanıcı seçimiyle alınır.
+- Aynı kitap başlık+yazar normalizasyonuyla tekilleştirilir.
+- İçe alınan metin IndexedDB'de cihazda saklanır.
+- Kaynak mimarisi `FREEZE_MANIFEST.json` ile dondurulmuştur.
+
+## Test
+`app.js` Node söz dizimi kontrolünden geçirilmiştir.
+
+# Sesli Kitaplık v4.4 — Hazır Türkçe E‑Kitaplar
+
+## Yeni
+- EPUB aramak zorunda kalmadan tek dokunuşla açık kaynak Türkçe kitap ekleme
+- 42 düzenlenmiş Türkçe klasik, tür filtreleriyle ayrı "Hazır Türkçe E‑Kitaplar" rafında
+- Kitap zaten ekliyse buton doğrudan Dinle olur
+- Özet mevcut eserlerde doğrudan Özet butonu
+- Arka planda Vikikaynak metni alınır, yerel IndexedDB'ye kaydedilir ve TTS kitabına çevrilir
+- EPUB/PDF/TXT manuel içe aktarma özelliği korunur
+- 736+ dinamik kamu malı arşiv korunur
+
+Not: Vikikaynak uygun sayfalarda EPUB dışa aktarımı sunar; uygulama kullanıcı deneyimini kolaylaştırmak için dosya aratmak yerine metni doğrudan aynı açık kaynaktan işler.
+
+# Sesli Kitaplık v4.3 — EPUB / PDF / TXT İçe Aktarma
+
+## Yeni
+- Kullanıcının kendi EPUB kitabını cihazdan içe aktarma
+- PDF metin katmanını okuyup TTS kitabına dönüştürme
+- TXT kitap içe aktarma
+- İçe aktarılan metinler IndexedDB'de yerel saklanır
+- Dosya sunucuya gönderilmez
+- Türkçe TTS ses seçimi, hız, perde, yer imi, kaldığın yer ve uyku zamanlayıcısı çalışır
+- Kullanıcının dosyaları için ayrı "EPUB · PDF · TXT" rafı
+- İsteğe bağlı kapak görseli
+- EPUB için JSZip, PDF için PDF.js kullanılır (ücretsiz açık kaynak)
+
+## PDF notu
+Metin katmanı olan PDF'ler desteklenir. Sadece taranmış sayfa görüntülerinden oluşan PDF'lerde OCR yapılmaz.
+
+## Telif
+Uygulama telifli güncel kitapları kendi sunucusundan dağıtmaz. Kullanıcı kendi yasal dosyasını cihazından içe aktarabilir.
+
 # Sesli Kitaplık v4.2 — Dinamik Kamu Malı Arşiv + Gerçek Özet Modu
 
 ## Değişiklikler

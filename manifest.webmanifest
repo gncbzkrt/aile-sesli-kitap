@@ -1,7 +1,7 @@
 {
-  "name": "Sesli Kitaplık",
-  "short_name": "Kitaplık",
-  "description": "Türkçe kamu malı eserleri cihaz içi TTS ile dinlemeye yönelik ücretsiz PWA.",
+  "name": "Sesli Kitaplık v5.0 LTS",
+  "short_name": "Sesli Kitaplık",
+  "description": "Türkçe kamu malı/açık erişimli kaynaklar, TTS, EPUB/PDF/TXT ve ses dosyaları için dondurulmuş LTS PWA.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

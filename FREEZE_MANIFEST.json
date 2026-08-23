@@ -1,0 +1,56 @@
+{
+  "version": "5.0.0-LTS-FROZEN",
+  "frozenAt": "2026-08-23",
+  "scope": "Turkish audiobook / TTS PWA",
+  "sources": [
+    {
+      "name": "Türkçe Vikikaynak - Türkiye'de yayımlanan kamu malı eserler",
+      "mode": "dynamic",
+      "policy": "public-domain category"
+    },
+    {
+      "name": "Türkçe Vikikaynak - Türkiye'de yayımı serbest eserler",
+      "mode": "dynamic",
+      "policy": "free-publication category"
+    },
+    {
+      "name": "Open Library",
+      "mode": "search-on-demand",
+      "policy": "language:tur + ebook_access:public + fulltext"
+    },
+    {
+      "name": "Project Gutenberg / Gutendex",
+      "mode": "search-on-demand",
+      "policy": "languages=tr only"
+    },
+    {
+      "name": "Local import",
+      "mode": "device-only",
+      "formats": [
+        "EPUB",
+        "PDF",
+        "TXT",
+        "MP3",
+        "M4A",
+        "AAC",
+        "WAV"
+      ]
+    }
+  ],
+  "curatedCatalogCount": 42,
+  "summaryCount": 6,
+  "features": [
+    "TTS voice selection",
+    "rate/pitch",
+    "bookmarks",
+    "sleep timer",
+    "history",
+    "favorites",
+    "offline local storage",
+    "dynamic archive",
+    "global source search",
+    "deduplication",
+    "15-minute curated summaries"
+  ],
+  "frozen": true
+}

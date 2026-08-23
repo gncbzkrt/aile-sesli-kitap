@@ -94,6 +94,36 @@
     <div id="featuredShelves"></div>
   </section>
 
+  <section id="sourceHubSection" class="section">
+    <div class="source-hero">
+      <div>
+        <div class="mini-label">v5.0 LTS · DONDURULMUŞ KAYNAK MOTORU</div>
+        <h2>Tüm Türkçe Kaynaklarda Ara</h2>
+        <p>Tek arama: düzenlenmiş klasikler, Vikikaynak, Open Library açık tam metinleri ve Project Gutenberg.</p>
+      </div>
+      <span class="frozen-badge">❄ FROZEN</span>
+    </div>
+    <div class="search-row source-search">
+      <input id="globalSourceSearch" type="search" placeholder="Kitap veya yazar ara…">
+      <button id="globalSourceSearchBtn" class="btn primary">Tüm Kaynaklarda Ara</button>
+    </div>
+    <div id="sourceStats" class="source-stats"></div>
+    <div id="globalSearchStatus" class="archive-status"></div>
+    <div id="globalSearchResults" class="source-results"></div>
+  </section>
+
+  <section id="readyBooksSection" class="section">
+    <div class="section-head">
+      <div>
+        <div class="mini-label">TEK DOKUNUŞLA EKLE</div>
+        <h2>Hazır Türkçe E‑Kitaplar</h2>
+      </div>
+    </div>
+    <p class="archive-intro">EPUB aramana gerek yok. Açık kaynak metni uygulama senin adına alır, telefona kaydeder ve Türkçe TTS ile okumaya hazırlar.</p>
+    <div id="readyBookChips" class="chips"></div>
+    <div id="readyBooksGrid" class="ready-grid"></div>
+  </section>
+
   <section id="archiveSection" class="section">
     <div class="section-head">
       <div>
@@ -116,13 +146,27 @@
     <button id="archiveMoreBtn" class="btn secondary full hidden">Daha Fazla Göster</button>
   </section>
 
+  <section id="myFilesSection" class="section">
+    <div class="section-head">
+      <div>
+        <div class="mini-label">KENDİ KİTAPLARIN</div>
+        <h2>EPUB · PDF · TXT</h2>
+      </div>
+      <button id="myFilesImportBtn" class="text-btn">Dosya Ekle +</button>
+    </div>
+    <div id="myFilesRail" class="rail"></div>
+  </section>
+
   <section id="myLibrarySection" class="section">
     <div class="section-head">
       <div>
         <div class="mini-label">SENİN CİHAZIN</div>
         <h2>Kütüphanem</h2>
       </div>
-      <button id="addBookBtn" class="btn primary small-btn">+ Ses Dosyası</button>
+      <div class="head-actions">
+        <button id="importBookBtn" class="btn secondary small-btn">+ EPUB/PDF/TXT</button>
+        <button id="addBookBtn" class="btn primary small-btn">+ Ses Dosyası</button>
+      </div>
     </div>
     <div class="search-row library-search">
       <input id="librarySearch" type="search" placeholder="Kütüphanemde ara…">
@@ -225,6 +269,27 @@
   </div>
 </div>
 
+<!-- Import text book -->
+<div id="importModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head"><h2>Kitap Dosyası İçe Aktar</h2><button data-close>×</button></div>
+    <p class="muted">EPUB, PDF veya TXT dosyanı seç. Dosya cihazında işlenir; sunucuya yüklenmez.</p>
+    <label>Kitap dosyası<input id="importFile" type="file" accept=".epub,.pdf,.txt,text/plain,application/pdf,application/epub+zip"></label>
+    <label>Kitap adı <span class="muted">(boş bırakırsan dosyadan alınır)</span><input id="importTitle"></label>
+    <label>Yazar<input id="importAuthor" placeholder="Bilinmiyorsa boş bırak"></label>
+    <label>Tür<select id="importGenre">
+      <option>Roman</option><option>Hikâye</option><option>Kişisel Gelişim</option><option>Tarih</option>
+      <option>Felsefe</option><option>Bilim</option><option>Çocuk</option><option>Din</option><option>Diğer</option>
+    </select></label>
+    <label>Kapak <span class="muted">(isteğe bağlı)</span><input id="importCover" type="file" accept="image/*"></label>
+    <div class="import-help">
+      <strong>Nasıl çalışır?</strong>
+      <span>TXT doğrudan okunur. EPUB içinden bölüm metinleri çıkarılır. PDF'nin metin katmanı okunur; yalnız taranmış görüntü PDF'lerinde metin bulunmayabilir.</span>
+    </div>
+    <button id="startImportBtn" class="btn primary full">İçe Aktar ve Kitaplığıma Ekle</button>
+  </div>
+</div>
+
 <!-- Settings -->
 <div id="settingsModal" class="modal hidden">
   <div class="modal-card">
@@ -238,6 +303,7 @@
     <label class="toggle-row"><span>Koyu tema</span><input id="darkToggle" type="checkbox" checked></label>
     <button id="historyBtn" class="btn secondary full">Dinleme Geçmişi</button>
     <button id="statsBtn" class="btn secondary full">Dinleme İstatistiklerim</button>
+    <button id="sourcesBtn" class="btn secondary full">Kaynak Durumu</button>
     <button id="storageBtn" class="btn secondary full">Depolama Kullanımı</button>
     <button id="clearBtn" class="btn danger full">Tüm Yerel Verileri Sil</button>
     <p class="source-note">TTS sesleri telefonunda yüklü olan sistem seslerinden gelir. Ses seçenekleri Android ve iPhone modeline göre değişebilir.</p>
@@ -254,6 +320,8 @@
 <div id="loading" class="loading hidden"><div class="spinner"></div><strong id="loadingText">Hazırlanıyor…</strong></div>
 <div id="toast" class="toast hidden"></div>
 <audio id="audio" preload="metadata"></audio>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs" type="module"></script>
 <script src="app.js" defer></script>
 </body>
 </html>
