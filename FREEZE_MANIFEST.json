@@ -1,5 +1,5 @@
 {
-  "version": "5.0.0-LTS-FROZEN",
+  "version": "5.0.1-LTS-FILTERED",
   "frozenAt": "2026-08-23",
   "scope": "Turkish audiobook / TTS PWA",
   "sources": [
@@ -52,5 +52,27 @@
     "deduplication",
     "15-minute curated summaries"
   ],
-  "frozen": true
+  "frozen": true,
+  "filterPolicy": {
+    "goal": "Only books and literary works in user-facing archive/search",
+    "excludedExamples": [
+      "indictments",
+      "court decisions",
+      "laws",
+      "regulations",
+      "official gazette",
+      "minutes",
+      "investigation files",
+      "reports",
+      "protocols",
+      "petitions",
+      "official notices"
+    ],
+    "heuristics": [
+      "legal/document keyword blacklist",
+      "very long segmented title rejection",
+      "excessive slash/number rejection",
+      "document-like uppercase title rejection"
+    ]
+  }
 }

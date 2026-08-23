@@ -1,3 +1,19 @@
+# v5.0.1 LTS FILTERED — Edebî Eser Filtresi
+
+Bu yama v5.0 kaynak mimarisini değiştirmez; yalnız kullanıcıya gösterilen sonuçları temizler.
+
+## Artık otomatik elenenler
+- İddianame / soruşturma / kovuşturma kayıtları
+- Mahkeme kararları ve dava dosyaları
+- Kanun / yönetmelik / tebliğ / genelge
+- Resmî Gazete ve resmî yazılar
+- Tutanak / komisyon / rapor / protokol
+- Dilekçe / başvuru / beyan / evrak
+- Aşırı uzun, numaralı, slash ağırlıklı belge başlıkları
+- Belge biçiminde tamamı büyük harfli uzun kayıtlar
+
+Filtre hem Canlı Arşiv hem "Tüm Türkçe Kaynaklarda Ara" üzerinde çalışır.
+
 # Sesli Kitaplık v5.0 LTS FROZEN
 
 Bu sürüm kaynak mimarisi tamamlanmış ve dondurulmuş sürümdür.

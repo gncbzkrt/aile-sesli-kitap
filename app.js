@@ -1,4 +1,4 @@
-const APP_VERSION="5.0.0-LTS-FROZEN";
+const APP_VERSION="5.0.1-LTS-FILTERED";
 
 const DB_NAME="aile-sesli-kitap-db", DB_VERSION=1, BOOKS="books", FILES="files", SETTINGS="settings";
 const CATALOG=[{"id": "ask-i-memnu", "title": "Aşk-ı Memnu", "author": "Halit Ziya Uşaklıgil", "category": "Roman", "wiki": "Aşk-ı Memnu", "desc": "Servet-i Fünun döneminin en tanınmış romanlarından biri. Yasak bir aşkın aile içindeki sonuçlarını anlatır.", "cover": "c1"}, {"id": "mai-ve-siyah", "title": "Mai ve Siyah", "author": "Halit Ziya Uşaklıgil", "category": "Roman", "wiki": "Mai ve Siyah", "desc": "Hayallerle gerçekler arasında sıkışan Ahmet Cemil'in edebiyat ve hayat mücadelesi.", "cover": "c7"}, {"id": "nemide", "title": "Nemide", "author": "Halit Ziya Uşaklıgil", "category": "Roman", "wiki": "Nemide", "desc": "Aşk, kıskançlık ve kırılganlık etrafında şekillenen erken dönem Halit Ziya romanı.", "cover": "c4"}, {"id": "kirik-hayatlar", "title": "Kırık Hayatlar", "author": "Halit Ziya Uşaklıgil", "category": "Roman", "wiki": "Kırık Hayatlar", "desc": "Aile, sadakat ve toplumsal baskılar üzerine klasik bir roman.", "cover": "c2"}, {"id": "pembe-incili-kaftan", "title": "Pembe İncili Kaftan", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Pembe İncili Kaftan", "desc": "Onur, devlet ve kişisel gurur üzerine unutulmaz bir Ömer Seyfettin hikâyesi.", "cover": "c6"}, {"id": "kasagi", "title": "Kaşağı", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Kaşağı", "desc": "Çocukluk, suçluluk ve vicdan üzerine Türk edebiyatının en bilinen hikâyelerinden.", "cover": "c5"}, {"id": "falaka", "title": "Falaka", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Falaka", "desc": "Eski okul hayatını mizah ve eleştiriyle anlatan klasik hikâye.", "cover": "c3"}, {"id": "perili-kosk", "title": "Perili Köşk", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Perili Köşk", "desc": "Batıl inanç, çıkar ve mizahın iç içe geçtiği kısa hikâye.", "cover": "c8"}, {"id": "yuksek-okceler", "title": "Yüksek Ökçeler", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Yüksek Ökçeler", "desc": "Görünüş ile gerçek arasındaki farkı mizahi biçimde anlatır.", "cover": "c1"}, {"id": "yalniz-efe", "title": "Yalnız Efe", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Yalnız Efe", "desc": "Adalet arayışı ve cesaret üzerine güçlü bir Anadolu hikâyesi.", "cover": "c2"}, {"id": "diyet", "title": "Diyet", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Diyet", "desc": "Onur ve borç duygusunu merkezine alan çarpıcı bir kısa hikâye.", "cover": "c7"}, {"id": "forsa", "title": "Forsa", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Forsa", "desc": "Esaret, umut ve vatan sevgisi üzerine klasik hikâye.", "cover": "c5"}, {"id": "basini-vermeyen-sehit", "title": "Başını Vermeyen Şehit", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Başını Vermeyen Şehit", "desc": "Tarihî motiflerle örülmüş destansı bir hikâye.", "cover": "c6"}, {"id": "and", "title": "And", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "And", "desc": "Çocukluk arkadaşlığı, sadakat ve fedakârlık üzerine.", "cover": "c4"}, {"id": "bomba", "title": "Bomba", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Bomba", "desc": "Balkan coğrafyasındaki siyasi şiddet ve insan trajedisi üzerine sert bir hikâye.", "cover": "c8"}, {"id": "bahar-ve-kelebekler", "title": "Bahar ve Kelebekler", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Bahar ve Kelebekler", "desc": "Kuşaklar ve değişen hayat anlayışları üzerine hüzünlü bir hikâye.", "cover": "c3"}, {"id": "ilk-cinayet", "title": "İlk Cinayet", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "İlk Cinayet", "desc": "Çocukluk hafızası ve vicdan üzerine kısa, yoğun bir anlatı.", "cover": "c1"}, {"id": "topuz", "title": "Topuz", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Topuz", "desc": "Tarih, güç ve diplomasi ekseninde ilerleyen bir hikâye.", "cover": "c6"}, {"id": "pembe-menekse", "title": "Pembe Menekşe", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Pembe Menekşe", "desc": "Duygusal tonu güçlü kısa bir Ömer Seyfettin hikâyesi.", "cover": "c4"}, {"id": "kir-sinegi", "title": "Kır Sineği", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Kır Sineği", "desc": "Hatıra ve kayıp duygusunu küçük bir nesne üzerinden anlatır.", "cover": "c5"}, {"id": "buse-i-mader", "title": "Buse-i Mader", "author": "Ömer Seyfettin", "category": "Hikâye", "wiki": "Buse-i Mader", "desc": "Şefkat ve anne sevgisi üzerine kısa bir hikâye.", "cover": "c7"}, {"id": "araba-sevdasi", "title": "Araba Sevdası", "author": "Recaizade Mahmut Ekrem", "category": "Roman", "wiki": "Araba Sevdası", "desc": "Yanlış Batılılaşmayı hicveden Türk romanının temel klasiklerinden.", "cover": "c3"}, {"id": "serguzest", "title": "Sergüzeşt", "author": "Samipaşazade Sezai", "category": "Roman", "wiki": "Sergüzeşt", "desc": "Esaret ve insan onuru üzerine Tanzimat döneminin önemli romanı.", "cover": "c2"}, {"id": "karabibik", "title": "Karabibik", "author": "Nabizade Nâzım", "category": "Roman", "wiki": "Karabibik", "desc": "Anadolu köylüsünü gerçekçi bir bakışla anlatan öncü eser.", "cover": "c5"}, {"id": "zehra", "title": "Zehra", "author": "Nabizade Nâzım", "category": "Roman", "wiki": "Zehra", "desc": "Kıskançlık ve psikolojik çözümlemeleriyle öne çıkan erken dönem roman.", "cover": "c8"}, {"id": "intibah", "title": "İntibah", "author": "Namık Kemal", "category": "Roman", "wiki": "İntibah", "desc": "Tutku, aldanış ve sonuçları üzerine Tanzimat dönemi romanı.", "cover": "c1"}, {"id": "cezmi", "title": "Cezmi", "author": "Namık Kemal", "category": "Roman", "wiki": "Cezmi", "desc": "Tarihî olayları ve kahramanlık temasını işleyen klasik roman.", "cover": "c6"}, {"id": "vatan-yahut-silistre", "title": "Vatan Yahut Silistre", "author": "Namık Kemal", "category": "Tiyatro", "wiki": "Vatan Yahut Silistre", "desc": "Vatan sevgisi ve fedakârlık temasını merkeze alan ünlü tiyatro eseri.", "cover": "c3"}, {"id": "felatun-rakim", "title": "Felatun Bey ile Rakım Efendi", "author": "Ahmet Mithat Efendi", "category": "Roman", "wiki": "Felâtun Bey ile Râkım Efendi", "desc": "Yanlış ve doğru Batılılaşma tiplerini karşı karşıya getiren klasik roman.", "cover": "c7"}, {"id": "esrar-i-cinayat", "title": "Esrar-ı Cinayat", "author": "Ahmet Mithat Efendi", "category": "Polisiye", "wiki": "Esrar-ı Cinayat", "desc": "Türk edebiyatının ilk polisiye örneklerinden biri.", "cover": "c8"}, {"id": "henuz-on-yedi-yasinda", "title": "Henüz On Yedi Yaşında", "author": "Ahmet Mithat Efendi", "category": "Roman", "wiki": "Henüz On Yedi Yaşında", "desc": "Toplumsal hayat ve ahlak tartışmaları etrafında gelişen roman.", "cover": "c4"}, {"id": "murebbiye", "title": "Mürebbiye", "author": "Hüseyin Rahmi Gürpınar", "category": "Roman", "wiki": "Mürebbiye", "desc": "Toplumsal ikiyüzlülük ve aile yaşamını mizahla ele alan roman.", "cover": "c2"}, {"id": "sipsevdi", "title": "Şıpsevdi", "author": "Hüseyin Rahmi Gürpınar", "category": "Roman", "wiki": "Şıpsevdi", "desc": "Taklitçi Batılılaşmayı hicveden güçlü bir toplumsal roman.", "cover": "c6"}, {"id": "gulyabani", "title": "Gulyabani", "author": "Hüseyin Rahmi Gürpınar", "category": "Mizah", "wiki": "Gulyabani", "desc": "Batıl inançları mizah ve gerilimle ele alan sevilen klasik.", "cover": "c5"}, {"id": "kuyruklu-yildiz", "title": "Kuyruklu Yıldız Altında Bir İzdivaç", "author": "Hüseyin Rahmi Gürpınar", "category": "Roman", "wiki": "Kuyruklu Yıldız Altında Bir İzdivaç", "desc": "Halley kuyruklu yıldızı paniği üzerinden toplumu hicveden roman.", "cover": "c1"}, {"id": "sik", "title": "Şık", "author": "Hüseyin Rahmi Gürpınar", "category": "Roman", "wiki": "Şık", "desc": "Gösteriş merakı ve yanlış Batılılaşma üzerine mizahi roman.", "cover": "c7"}, {"id": "safahat", "title": "Safahat", "author": "Mehmet Âkif Ersoy", "category": "Şiir", "wiki": "Safahat", "desc": "Mehmet Âkif'in şiir külliyatının ana eseri.", "cover": "c3"}, {"id": "sermin", "title": "Şermin", "author": "Tevfik Fikret", "category": "Şiir", "wiki": "Şermin", "desc": "Çocuklar için yazılmış şiirlerden oluşan klasik eser.", "cover": "c4"}, {"id": "rubab-i-sikeste", "title": "Rübab-ı Şikeste", "author": "Tevfik Fikret", "category": "Şiir", "wiki": "Rübab-ı Şikeste", "desc": "Servet-i Fünun şiirinin temel kitaplarından.", "cover": "c8"}, {"id": "turkculugun-esaslari", "title": "Türkçülüğün Esasları", "author": "Ziya Gökalp", "category": "Düşünce", "wiki": "Türkçülüğün Esasları", "desc": "Ziya Gökalp'in kültür ve toplum görüşlerini sistemleştirdiği eser.", "cover": "c2"}, {"id": "altin-isik", "title": "Altın Işık", "author": "Ziya Gökalp", "category": "Masal", "wiki": "Altın Işık", "desc": "Masal, destan ve şiir unsurlarını bir araya getiren eser.", "cover": "c6"}, {"id": "hac-yolunda", "title": "Hac Yolunda", "author": "Cenap Şahabettin", "category": "Gezi", "wiki": "Hac Yolunda", "desc": "Gezi izlenimleri ve gözlemlerden oluşan klasik eser.", "cover": "c5"}];
@@ -433,7 +433,9 @@ async function globalSourceSearch(){
   try{
     const u="https://tr.wikisource.org/w/api.php?"+new URLSearchParams({origin:"*",action:"query",list:"search",srsearch:q,srnamespace:"0",srlimit:"20",format:"json",formatversion:"2"});
     const j=await (await fetch(u,{cache:"no-store"})).json();
-    (j.query?.search||[]).forEach(x=>rows.push({source:"Vikikaynak",kind:"wikisource",title:x.title,author:"Türkçe Vikikaynak",wikiTitle:x.title}));
+    (j.query?.search||[]).filter(x=>isLikelyBookTitle(x.title)).forEach(x=>rows.push({
+      source:"Vikikaynak",kind:"wikisource",title:x.title,author:"Türkçe Vikikaynak",wikiTitle:x.title
+    }));
   }catch(e){console.warn("Vikikaynak arama",e)}
   // Open Library: only Turkish + public ebook access. Low-volume search only.
   try{
@@ -441,7 +443,7 @@ async function globalSourceSearch(){
       q:`${q} language:tur ebook_access:public`,fields:"key,title,author_name,ia,public_scan_b,has_fulltext,first_publish_year",limit:"20"
     });
     const j=await (await fetch(u,{cache:"no-store"})).json();
-    (j.docs||[]).filter(x=>x.has_fulltext&&x.ia?.length).forEach(x=>rows.push({
+    (j.docs||[]).filter(x=>x.has_fulltext&&x.ia?.length&&isLikelyBookTitle(x.title)).forEach(x=>rows.push({
       source:"Open Library",kind:"openlibrary",title:x.title,author:(x.author_name||[]).join(", ")||"Bilinmeyen yazar",
       ia:x.ia[0],year:x.first_publish_year||"",publicScan:!!x.public_scan_b
     }));
@@ -450,7 +452,7 @@ async function globalSourceSearch(){
   try{
     const u="https://gutendex.com/books?"+new URLSearchParams({languages:"tr",search:q});
     const j=await (await fetch(u,{cache:"no-store"})).json();
-    (j.results||[]).slice(0,20).forEach(x=>rows.push({
+    (j.results||[]).filter(x=>isLikelyBookTitle(x.title)).slice(0,20).forEach(x=>rows.push({
       source:"Project Gutenberg",kind:"gutenberg",title:x.title,author:(x.authors||[]).map(a=>a.name).join(", ")||"Bilinmeyen yazar",
       gutenberg:x
     }));
@@ -538,6 +540,97 @@ function showSourceStatus(){
   openModal("#listModal");
 }
 
+
+const NON_BOOK_PATTERNS=[
+  /\biddianame(si)?\b/i,
+  /\bsoruşturma\b/i,
+  /\bkovuşturma\b/i,
+  /\bmahkeme(si)?\b/i,
+  /\bdava(sı|si)?\b/i,
+  /\bkarar(ı)?\b/i,
+  /\bkararname\b/i,
+  /\bkanun(u)?\b/i,
+  /\byasa(sı)?\b/i,
+  /\byönetmelik\b/i,
+  /\btebliğ\b/i,
+  /\bgenelge\b/i,
+  /\btüzük\b/i,
+  /\bresm[iî]\s+gazete\b/i,
+  /\btutanak(lar)?\b/i,
+  /\bkomisyon\b/i,
+  /\brapor(u)?\b/i,
+  /\bprotokol\b/i,
+  /\bsözleşme(si)?\b/i,
+  /\banlaşma(sı)?\b/i,
+  /\bmütalaa\b/i,
+  /\bbilirkişi\b/i,
+  /\bsavcılık\b/i,
+  /\bsavcı(lık)?\b/i,
+  /\bşüpheli(ler)?\b/i,
+  /\bsanık(lar)?\b/i,
+  /\btanık(lar)?\b/i,
+  /\bdelil(ler)?\b/i,
+  /\bevrak(ı)?\b/i,
+  /\bdosya(sı)?\b/i,
+  /\bbaşvuru\b/i,
+  /\bdilekçe\b/i,
+  /\bbeyan(name)?\b/i,
+  /\bbildiri(si)?\b/i,
+  /\bduyuru\b/i,
+  /\bmeclis\b/i,
+  /\btbmm\b/i,
+  /\bresm[iî]\s+yazı\b/i,
+  /\bbakanlığ[ıi]\b/i,
+  /\bkurul(u)?\b/i,
+  /\bkurum(u)?\b/i,
+  /\bvergi\b/i,
+  /\bihale\b/i,
+  /\bceza\s+dosyası\b/i,
+  /\besas\s+no\b/i,
+  /\bkarar\s+no\b/i,
+  /\btezkere\b/i,
+  /\bmazbata\b/i,
+  /\bmevzuat\b/i,
+  /\byargıtay\b/i,
+  /\bdanıştay\b/i,
+  /\banayasa\s+mahkemesi\b/i
+];
+
+const STRONG_BOOK_HINTS=[
+  /\broman\b/i,/\bhik[aâ]ye\b/i,/\böykü\b/i,/\bşiir\b/i,/\bmasal\b/i,
+  /\bdestan\b/i,/\btiyatro\b/i,/\bpiyes\b/i,/\bnovel\b/i,/\bpoem\b/i,
+  /\bhatırat\b/i,/\banı(lar)?\b/i,/\bseyahat(name)?\b/i,/\bgezi\b/i,
+  /\bdeneme\b/i,/\bmektuplar\b/i,/\bfabl\b/i
+];
+
+function looksLikeDocumentTitle(title){
+  const t=String(title||"").trim();
+  if(!t)return true;
+  if(NON_BOOK_PATTERNS.some(rx=>rx.test(t)))return true;
+
+  // Legal/document pages are often extremely long, heavily segmented, numbered and uppercase.
+  const slashCount=(t.match(/\//g)||[]).length;
+  const dashCount=(t.match(/[-–—]/g)||[]).length;
+  const digitCount=(t.match(/\d/g)||[]).length;
+  const letters=(t.match(/[A-Za-zÇĞİÖŞÜçğıöşü]/g)||[]);
+  const upper=(t.match(/[A-ZÇĞİÖŞÜ]/g)||[]);
+  const upperRatio=letters.length ? upper.length/letters.length : 0;
+
+  if(t.length>145)return true;
+  if(slashCount>=2)return true;
+  if(digitCount>=8 && t.length>55)return true;
+  if(upperRatio>0.68 && t.length>48 && !STRONG_BOOK_HINTS.some(rx=>rx.test(t)))return true;
+  if(/^\s*\d+[\.\-\/)]/.test(t) && t.length>55)return true;
+  if(/\b(bölüm|madde|ek|liste)\s*[IVXLC\d]+\b/i.test(t) && t.length>70)return true;
+  if(/\b\d{2,4}[-\/]\d{2,4}\b/.test(t) && t.length>60)return true;
+
+  return false;
+}
+
+function isLikelyBookTitle(title){
+  return !looksLikeDocumentTitle(title);
+}
+
 const ARCHIVE_CATEGORIES={
   public:"Kategori:Türkiye'de yayımlanan kamu malı eserler",
   free:"Kategori:Türkiye'de yayımı serbest eserler"
@@ -554,7 +647,8 @@ async function mwCategoryAll(category){
   return out;
 }
 function archiveNoise(title){
-  return /^(Kategori:|Dosya:|Şablon:|Yardım:|Vikikaynak:|Kişi:|Sayfa:|Dizin:)/i.test(title);
+  if(/^(Kategori:|Dosya:|Şablon:|Yardım:|Vikikaynak:|Kişi:|Sayfa:|Dizin:)/i.test(title))return true;
+  return looksLikeDocumentTitle(title);
 }
 async function loadArchive(force){
   $("#archiveStatus").textContent="Türkçe arşiv taranıyor…";
@@ -580,12 +674,13 @@ function renderArchive(){
   const q=$("#archiveSearch").value.trim().toLocaleLowerCase("tr");
   const list=archiveItems.filter(x=>!q||x.title.toLocaleLowerCase("tr").includes(q));
   const shown=list.slice(0,archiveShown);
-  $("#archiveStatus").textContent=`${list.length} eser bulundu · ${archiveMode==="public"?"kamu malı":"yayımı serbest"}`;
+  $("#archiveStatus").textContent=`${list.length} kitap/edebî eser bulundu · belge ve resmî metinler elendi · ${archiveMode==="public"?"kamu malı":"yayımı serbest"}`;
   $("#archiveGrid").innerHTML=shown.map(x=>`<div class="archive-item"><div><strong>${esc(x.title)}</strong><span>Türkçe Vikikaynak · TTS ile dinlenebilir</span></div><button data-archive-add="${esc(x.title)}">Dinle</button></div>`).join("")||'<p class="muted">Sonuç bulunamadı.</p>';
   $("#archiveMoreBtn").classList.toggle("hidden",shown.length>=list.length);
   $$("[data-archive-add]").forEach(b=>b.onclick=()=>addArchiveWork(b.dataset.archiveAdd));
 }
 async function addArchiveWork(title){
+  if(!isLikelyBookTitle(title))return toast("Bu kayıt kitap/edebî eser olmadığı için filtrelendi.");
   const exists=books.find(b=>b.archiveTitle===title);
   if(exists)return openBook(exists.id,true);
   loading(true,`“${title}” hazırlanıyor…`);
