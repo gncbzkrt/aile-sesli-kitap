@@ -1,4 +1,4 @@
-name: APK Oluştur - Native Alt Oynatıcı v6
+name: APK Oluştur - Kart Açma Fix v7
 
 on:
   workflow_dispatch:
@@ -70,8 +70,8 @@ jobs:
                   applicationId 'com.guncelgelisim.app'
                   minSdk 26
                   targetSdk 35
-                  versionCode 5
-                  versionName '1.4.0'
+                  versionCode 6
+                  versionName '1.5.0'
               }
 
               compileOptions {
@@ -273,15 +273,34 @@ jobs:
               private void installNativeHint() {
                   String js =
                       "javascript:(function(){" +
-                      "if(window.__ANDROID_NATIVE_BAR__)return;" +
-                      "window.__ANDROID_NATIVE_BAR__=true;" +
-                      "var p=document.querySelector('#play');" +
-                      "if(p){" +
-                      "p.textContent='↓ Android oynatıcıyı kullan';" +
-                      "p.disabled=true;" +
-                      "p.style.opacity='0.55';" +
+                      "if(window.__ANDROID_CARD_FIX_V7__)return;" +
+                      "window.__ANDROID_CARD_FIX_V7__=true;" +
+
+                      "document.addEventListener('click',function(e){" +
+                      "var el=e.target&&e.target.closest?e.target.closest('[data-open]'):null;" +
+                      "if(!el)return;" +
+                      "var id=el.getAttribute('data-open');" +
+                      "if(!id)return;" +
+
+                      "try{" +
+                      "if(typeof openItem==='function'){" +
+                      "openItem(id);" +
+                      "setTimeout(function(){" +
+                      "var p=document.querySelector('#player');" +
+                      "if(p&&p.classList)p.classList.remove('hidden');" +
+                      "var play=document.querySelector('#play');" +
+                      "if(play){" +
+                      "play.textContent='↓ Android oynatıcıyı kullan';" +
+                      "play.disabled=true;" +
+                      "play.style.opacity='0.55';" +
                       "}" +
+                      "},80);" +
+                      "}" +
+                      "}catch(err){console.error('Kart açma hatası',err);}" +
+                      "},true);" +
+
                       "})();";
+
                   webView.evaluateJavascript(js, null);
               }
 
@@ -334,12 +353,18 @@ jobs:
                                       0.9);
 
                               if (text.trim().isEmpty()) {
-                                  Toast.makeText(
-                                      this,
-                                      "Önce bir içerik kartına dokunup "
-                                          + "özet ekranını aç.",
-                                      Toast.LENGTH_LONG)
-                                      .show();
+                                  webView.evaluateJavascript(
+                                      "(function(){"
+                                          + "var p=document.querySelector('#player');"
+                                          + "if(p&&p.scrollIntoView)p.scrollIntoView({behavior:'smooth'});"
+                                          + "return !!document.querySelector('#summary');"
+                                          + "})()",
+                                      ignored -> Toast.makeText(
+                                          this,
+                                          "Kart açılmadı. Aynı karta bir kez daha dokun, "
+                                              + "sonra alttaki DİNLE'ye bas.",
+                                          Toast.LENGTH_LONG)
+                                          .show());
                                   return;
                               }
 
