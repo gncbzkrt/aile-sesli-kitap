@@ -1,4 +1,4 @@
-name: APK Oluştur - Sağlam Sürüm
+name: APK Oluştur - İkon + Dinle Fix
 
 on:
   workflow_dispatch:
@@ -30,6 +30,7 @@ jobs:
         run: |
           set -e
           mkdir -p app/src/main/java/com/guncelgelisim/app
+          mkdir -p app/src/main/res/drawable
 
           cat > settings.gradle <<'EOF'
           pluginManagement {
@@ -69,8 +70,8 @@ jobs:
                   applicationId 'com.guncelgelisim.app'
                   minSdk 26
                   targetSdk 35
-                  versionCode 2
-                  versionName '1.1.0'
+                  versionCode 3
+                  versionName '1.2.0'
               }
 
               compileOptions {
@@ -78,6 +79,25 @@ jobs:
                   targetCompatibility JavaVersion.VERSION_17
               }
           }
+          EOF
+
+
+          cat > app/src/main/res/drawable/app_icon.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+              <path
+                  android:fillColor="#101416"
+                  android:pathData="M0,0h108v108h-108z"/>
+              <path
+                  android:fillColor="#F0A62A"
+                  android:pathData="M54,15a39,39 0,1 0,0 78a39,39 0,1 0,0 -78"/>
+              <path
+                  android:fillColor="#101416"
+                  android:pathData="M45,35L45,73L77,54Z"/>
+          </vector>
           EOF
 
           cat > app/src/main/AndroidManifest.xml <<'EOF'
@@ -91,6 +111,8 @@ jobs:
               <application
                   android:allowBackup="true"
                   android:usesCleartextTraffic="false"
+                  android:icon="@drawable/app_icon"
+                  android:roundIcon="@drawable/app_icon"
                   android:label="15 Dakikada Gelişim"
                   android:theme="@android:style/Theme.Material.NoActionBar">
 
@@ -170,37 +192,72 @@ jobs:
               private void injectNativeTts() {
                   String js =
                       "javascript:(function(){" +
-                      "if(window.__NATIVE_TTS__)return;" +
-                      "window.__NATIVE_TTS__=true;" +
-                      "function bind(){" +
-                      "var p=document.querySelector('#play');" +
-                      "if(p&&!p.__nt){" +
-                      "p.__nt=true;" +
-                      "p.onclick=function(e){" +
-                      "if(e){e.preventDefault();e.stopImmediatePropagation();}" +
-                      "var t=document.querySelector('#summary');" +
+                      "if(window.__NATIVE_TTS_V4__)return;" +
+                      "window.__NATIVE_TTS_V4__=true;" +
+
+                      "function titleText(){" +
                       "var h=document.querySelector('#playerTitle');" +
-                      "var r=document.querySelector('#rate');" +
-                      "if(!t||!t.innerText.trim())return false;" +
-                      "AndroidTTS.toggle(" +
-                      "String(h?h.innerText:'15 Dakikada Gelişim')," +
-                      "String(t.innerText)," +
-                      "Number(r?r.value:0.9));" +
-                      "return false;" +
-                      "};}" +
-                      "var b=document.querySelector('#back');" +
-                      "if(b&&!b.__nt){b.__nt=true;b.onclick=function(e){" +
-                      "if(e){e.preventDefault();e.stopImmediatePropagation();}" +
-                      "AndroidTTS.skip(-1);return false;};}" +
-                      "var f=document.querySelector('#forward');" +
-                      "if(f&&!f.__nt){f.__nt=true;f.onclick=function(e){" +
-                      "if(e){e.preventDefault();e.stopImmediatePropagation();}" +
-                      "AndroidTTS.skip(1);return false;};}" +
-                      "var c=document.querySelector('#closePlayer');" +
-                      "if(c&&!c.__nt){c.__nt=true;c.addEventListener('click'," +
-                      "function(){AndroidTTS.stop();});}" +
+                      "return String(h&&h.innerText?h.innerText:'15 Dakikada Gelişim');" +
                       "}" +
-                      "bind();setInterval(bind,1000);" +
+
+                      "function summaryText(){" +
+                      "var s=document.querySelector('#summary');" +
+                      "return String(s&&s.innerText?s.innerText:'').trim();" +
+                      "}" +
+
+                      "function rateValue(){" +
+                      "var r=document.querySelector('#rate');" +
+                      "var n=Number(r?r.value:0.9);" +
+                      "return isFinite(n)?n:0.9;" +
+                      "}" +
+
+                      "function nativePlay(){" +
+                      "var text=summaryText();" +
+                      "if(!text){return false;}" +
+                      "AndroidTTS.toggle(titleText(),text,rateValue());" +
+                      "var p=document.querySelector('#play');" +
+                      "if(p)p.textContent='⏯ Duraklat / Devam';" +
+                      "return true;" +
+                      "}" +
+
+                      "document.addEventListener('click',function(e){" +
+                      "var el=e.target&&e.target.closest?e.target.closest('button'):null;" +
+                      "if(!el)return;" +
+
+                      "if(el.id==='play'){" +
+                      "e.preventDefault();" +
+                      "e.stopPropagation();" +
+                      "e.stopImmediatePropagation();" +
+                      "nativePlay();" +
+                      "return;" +
+                      "}" +
+
+                      "if(el.id==='back'){" +
+                      "e.preventDefault();" +
+                      "e.stopPropagation();" +
+                      "e.stopImmediatePropagation();" +
+                      "AndroidTTS.skip(-1);" +
+                      "return;" +
+                      "}" +
+
+                      "if(el.id==='forward'){" +
+                      "e.preventDefault();" +
+                      "e.stopPropagation();" +
+                      "e.stopImmediatePropagation();" +
+                      "AndroidTTS.skip(1);" +
+                      "return;" +
+                      "}" +
+
+                      "if(el.id==='closePlayer'){" +
+                      "AndroidTTS.stop();" +
+                      "return;" +
+                      "}" +
+
+                      "if(el.classList&&el.classList.contains('listen')){" +
+                      "setTimeout(function(){nativePlay();},350);" +
+                      "}" +
+                      "},true);" +
+
                       "})();";
 
                   webView.evaluateJavascript(js, null);
