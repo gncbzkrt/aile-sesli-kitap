@@ -1,15 +1,9 @@
-# 15 Dakikada Gelişim v8
+# 15 Dakikada Gelişim v9
 
-Toplam içerik: 57
-- Genel gelişim: 37
-- 18+ yetişkin: 8
-- Din & Hayat: 12
+Toplam içerik: 249
+- Genel gelişim: 189
+- 18+ yetişkin: 30
+- Din & Hayat: 30
 
-Bu sürümde içerikler kitap tanıtımı şeklinde değildir.
-Her dinleme:
-1. Temel dersleri çıkarır.
-2. Günlük hayata çevirir.
-3. Somut uygulama görevleri verir.
-4. Dinleme sonu kişisel muhasebe sorularıyla biter.
-
+İçerikler tanıtım değil, uygulanabilir gelişim dersi biçimindedir.
 Tüm görünür ve dinlenen içerik Türkçedir.
