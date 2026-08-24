@@ -1,4 +1,4 @@
-name: APK Oluştur - Tek Dosya
+name: APK Oluştur - Sağlam Sürüm
 
 on:
   workflow_dispatch:
@@ -6,6 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Java 17 kur
         uses: actions/setup-java@v5
@@ -29,7 +30,8 @@ jobs:
         run: |
           set -e
           mkdir -p app/src/main/java/com/guncelgelisim/app
-          cat > 'settings.gradle' <<'EOF_SETTINGS_GRADLE'
+
+          cat > settings.gradle <<'EOF'
           pluginManagement {
               repositories {
                   google()
@@ -46,70 +48,72 @@ jobs:
           }
           rootProject.name = 'OnBesDakikadaGelisim'
           include ':app'
-          EOF_SETTINGS_GRADLE
+          EOF
 
-          cat > 'build.gradle' <<'EOF_BUILD_GRADLE'
+          cat > build.gradle <<'EOF'
           plugins {
               id 'com.android.application' version '8.7.3' apply false
           }
-          EOF_BUILD_GRADLE
+          EOF
 
-          cat > 'app/build.gradle' <<'EOF_APP_BUILD_GRADLE'
+          cat > app/build.gradle <<'EOF'
           plugins {
               id 'com.android.application'
           }
-          
+
           android {
               namespace 'com.guncelgelisim.app'
               compileSdk 35
-          
+
               defaultConfig {
                   applicationId 'com.guncelgelisim.app'
                   minSdk 26
                   targetSdk 35
-                  versionCode 1
-                  versionName '1.0.0'
+                  versionCode 2
+                  versionName '1.1.0'
+              }
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
               }
           }
-          
-          dependencies {
-              implementation 'androidx.core:core:1.15.0'
-              implementation 'androidx.media:media:1.7.0'
-          }
-          EOF_APP_BUILD_GRADLE
+          EOF
 
-          cat > 'app/src/main/AndroidManifest.xml' <<'EOF_APP_SRC_MAIN_ANDROIDMANIFEST_XML'
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <uses-permission android:name="android.permission.INTERNET" />
-              <uses-permission android:name="android.permission.WAKE_LOCK" />
-              <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-              <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-              <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-          
+              <uses-permission android:name="android.permission.INTERNET"/>
+              <uses-permission android:name="android.permission.WAKE_LOCK"/>
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
               <application
                   android:allowBackup="true"
                   android:usesCleartextTraffic="false"
                   android:label="15 Dakikada Gelişim"
                   android:theme="@android:style/Theme.Material.NoActionBar">
+
                   <activity
                       android:name=".MainActivity"
                       android:exported="true">
                       <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
                       </intent-filter>
                   </activity>
+
                   <service
                       android:name=".TtsPlaybackService"
                       android:exported="false"
-                      android:foregroundServiceType="mediaPlayback" />
+                      android:foregroundServiceType="mediaPlayback"/>
               </application>
           </manifest>
-          EOF_APP_SRC_MAIN_ANDROIDMANIFEST_XML
+          EOF
 
-          cat > 'app/src/main/java/com/guncelgelisim/app/MainActivity.java' <<'EOF_APP_SRC_MAIN_JAVA_COM_GUNCELGELISIM_APP_MAINACTIVITY_JAVA'
+          cat > app/src/main/java/com/guncelgelisim/app/MainActivity.java <<'EOF'
           package com.guncelgelisim.app;
-          
+
           import android.Manifest;
           import android.app.Activity;
           import android.content.Context;
@@ -122,97 +126,155 @@ jobs:
           import android.webkit.WebSettings;
           import android.webkit.WebView;
           import android.webkit.WebViewClient;
-          
+
           public class MainActivity extends Activity {
-              private static final String APP_URL = "https://gncbzkrt.github.io/aile-sesli-kitap/";
+              private static final String APP_URL =
+                      "https://gncbzkrt.github.io/aile-sesli-kitap/";
               private WebView webView;
-          
+
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
-          
-                  if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                      requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 10);
+
+                  if (Build.VERSION.SDK_INT >= 33 &&
+                          checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                                  != PackageManager.PERMISSION_GRANTED) {
+                      requestPermissions(
+                              new String[]{Manifest.permission.POST_NOTIFICATIONS}, 10);
                   }
-          
+
                   webView = new WebView(this);
                   setContentView(webView);
+
                   WebSettings s = webView.getSettings();
                   s.setJavaScriptEnabled(true);
                   s.setDomStorageEnabled(true);
                   s.setDatabaseEnabled(true);
                   s.setMediaPlaybackRequiresUserGesture(false);
-                  s.setCacheMode(WebSettings.LOAD_DEFAULT);
+
                   webView.setWebChromeClient(new WebChromeClient());
-                  webView.addJavascriptInterface(new AndroidTtsBridge(this), "AndroidTTS");
+                  webView.addJavascriptInterface(
+                          new AndroidTtsBridge(this), "AndroidTTS");
+
                   webView.setWebViewClient(new WebViewClient() {
-                      @Override public void onPageFinished(WebView view, String url) {
+                      @Override
+                      public void onPageFinished(WebView view, String url) {
                           super.onPageFinished(view, url);
-                          injectNativeTtsControls();
+                          injectNativeTts();
                       }
                   });
+
                   webView.loadUrl(APP_URL);
               }
-          
-              private void injectNativeTtsControls() {
-                  String js = "javascript:(function(){" +
-                          "if(window.__ANDROID_TTS_HOOKED)return;window.__ANDROID_TTS_HOOKED=true;" +
-                          "function hook(){" +
-                          "var p=document.querySelector('#play');" +
-                          "if(p){p.onclick=function(e){e&&e.stopImmediatePropagation();var t=document.querySelector('#summary');var title=document.querySelector('#playerTitle');var rate=document.querySelector('#rate');if(!t||!t.innerText.trim())return;AndroidTTS.toggle(String(title?title.innerText:'15 Dakikada Gelişim'),String(t.innerText),Number(rate?rate.value:0.9));p.textContent='⏯ Duraklat / Devam';return false;};}" +
-                          "var b=document.querySelector('#back');if(b){b.onclick=function(e){e&&e.stopImmediatePropagation();AndroidTTS.skip(-1);return false;};}" +
-                          "var f=document.querySelector('#forward');if(f){f.onclick=function(e){e&&e.stopImmediatePropagation();AndroidTTS.skip(1);return false;};}" +
-                          "var c=document.querySelector('#closePlayer');if(c&&!c.__nativeBound){c.__nativeBound=true;c.addEventListener('click',function(){AndroidTTS.stop();});}" +
-                          "var r=document.querySelector('#rate');if(r&&!r.__nativeBound){r.__nativeBound=true;r.addEventListener('input',function(){AndroidTTS.setRate(Number(r.value||0.9));});}" +
-                          "var g=document.querySelector('#grid');if(g&&!g.__nativeBound){g.__nativeBound=true;g.addEventListener('click',function(ev){var el=ev.target.closest&&ev.target.closest('[data-open]');if(el)AndroidTTS.stop();},true);}" +
-                          "}" +
-                          "hook();setInterval(hook,1200);" +
-                          "})();";
+
+              private void injectNativeTts() {
+                  String js =
+                      "javascript:(function(){" +
+                      "if(window.__NATIVE_TTS__)return;" +
+                      "window.__NATIVE_TTS__=true;" +
+                      "function bind(){" +
+                      "var p=document.querySelector('#play');" +
+                      "if(p&&!p.__nt){" +
+                      "p.__nt=true;" +
+                      "p.onclick=function(e){" +
+                      "if(e){e.preventDefault();e.stopImmediatePropagation();}" +
+                      "var t=document.querySelector('#summary');" +
+                      "var h=document.querySelector('#playerTitle');" +
+                      "var r=document.querySelector('#rate');" +
+                      "if(!t||!t.innerText.trim())return false;" +
+                      "AndroidTTS.toggle(" +
+                      "String(h?h.innerText:'15 Dakikada Gelişim')," +
+                      "String(t.innerText)," +
+                      "Number(r?r.value:0.9));" +
+                      "return false;" +
+                      "};}" +
+                      "var b=document.querySelector('#back');" +
+                      "if(b&&!b.__nt){b.__nt=true;b.onclick=function(e){" +
+                      "if(e){e.preventDefault();e.stopImmediatePropagation();}" +
+                      "AndroidTTS.skip(-1);return false;};}" +
+                      "var f=document.querySelector('#forward');" +
+                      "if(f&&!f.__nt){f.__nt=true;f.onclick=function(e){" +
+                      "if(e){e.preventDefault();e.stopImmediatePropagation();}" +
+                      "AndroidTTS.skip(1);return false;};}" +
+                      "var c=document.querySelector('#closePlayer');" +
+                      "if(c&&!c.__nt){c.__nt=true;c.addEventListener('click'," +
+                      "function(){AndroidTTS.stop();});}" +
+                      "}" +
+                      "bind();setInterval(bind,1000);" +
+                      "})();";
+
                   webView.evaluateJavascript(js, null);
               }
-          
-              @Override public void onBackPressed() {
-                  if (webView != null && webView.canGoBack()) webView.goBack(); else super.onBackPressed();
-              }
-          
-              @Override protected void onDestroy() {
-                  if (webView != null) webView.destroy();
-                  super.onDestroy();
-              }
-          
+
               static class AndroidTtsBridge {
                   private final Context context;
-                  AndroidTtsBridge(Context context) { this.context = context.getApplicationContext(); }
-          
-                  private void send(String action, String title, String text, float rate, int delta) {
+
+                  AndroidTtsBridge(Context c) {
+                      context = c.getApplicationContext();
+                  }
+
+                  private void send(
+                          String action,
+                          String title,
+                          String text,
+                          float rate,
+                          int delta) {
+
                       Intent i = new Intent(context, TtsPlaybackService.class);
                       i.setAction(action);
-                      if (title != null) i.putExtra(TtsPlaybackService.EXTRA_TITLE, title);
-                      if (text != null) i.putExtra(TtsPlaybackService.EXTRA_TEXT, text);
+
+                      if (title != null)
+                          i.putExtra(TtsPlaybackService.EXTRA_TITLE, title);
+                      if (text != null)
+                          i.putExtra(TtsPlaybackService.EXTRA_TEXT, text);
+
                       i.putExtra(TtsPlaybackService.EXTRA_RATE, rate);
                       i.putExtra(TtsPlaybackService.EXTRA_DELTA, delta);
-                      if (TtsPlaybackService.ACTION_TOGGLE_WITH_TEXT.equals(action) && Build.VERSION.SDK_INT >= 26) context.startForegroundService(i); else context.startService(i);
+
+                      if (TtsPlaybackService.ACTION_PLAY_TEXT.equals(action)
+                              && Build.VERSION.SDK_INT >= 26) {
+                          context.startForegroundService(i);
+                      } else {
+                          context.startService(i);
+                      }
                   }
-          
-                  @JavascriptInterface public void toggle(String title, String text, double rate) {
-                      send(TtsPlaybackService.ACTION_TOGGLE_WITH_TEXT, title, text, (float)rate, 0);
+
+                  @JavascriptInterface
+                  public void toggle(String title, String text, double rate) {
+                      send(
+                          TtsPlaybackService.ACTION_PLAY_TEXT,
+                          title,
+                          text,
+                          (float) rate,
+                          0);
                   }
-                  @JavascriptInterface public void stop() {
-                      send(TtsPlaybackService.ACTION_STOP, null, null, 1f, 0);
+
+                  @JavascriptInterface
+                  public void stop() {
+                      send(
+                          TtsPlaybackService.ACTION_STOP,
+                          null,
+                          null,
+                          1f,
+                          0);
                   }
-                  @JavascriptInterface public void skip(int delta) {
-                      send(TtsPlaybackService.ACTION_SKIP, null, null, 1f, delta);
-                  }
-                  @JavascriptInterface public void setRate(double rate) {
-                      send(TtsPlaybackService.ACTION_RATE, null, null, (float)rate, 0);
+
+                  @JavascriptInterface
+                  public void skip(int delta) {
+                      send(
+                          TtsPlaybackService.ACTION_SKIP,
+                          null,
+                          null,
+                          1f,
+                          delta);
                   }
               }
           }
-          EOF_APP_SRC_MAIN_JAVA_COM_GUNCELGELISIM_APP_MAINACTIVITY_JAVA
+          EOF
 
-          cat > 'app/src/main/java/com/guncelgelisim/app/TtsPlaybackService.java' <<'EOF_APP_SRC_MAIN_JAVA_COM_GUNCELGELISIM_APP_TTSPLAYBACKSERVICE_JAVA'
+          cat > app/src/main/java/com/guncelgelisim/app/TtsPlaybackService.java <<'EOF'
           package com.guncelgelisim.app;
-          
+
           import android.app.Notification;
           import android.app.NotificationChannel;
           import android.app.NotificationManager;
@@ -220,246 +282,585 @@ jobs:
           import android.app.Service;
           import android.content.Intent;
           import android.media.AudioAttributes;
+          import android.media.session.MediaSession;
+          import android.media.session.PlaybackState;
           import android.os.Build;
           import android.os.IBinder;
           import android.os.PowerManager;
           import android.speech.tts.TextToSpeech;
           import android.speech.tts.UtteranceProgressListener;
-          
-          import androidx.core.app.NotificationCompat;
-          import androidx.media.app.NotificationCompat.MediaStyle;
-          import android.support.v4.media.session.MediaSessionCompat;
-          import android.support.v4.media.session.PlaybackStateCompat;
-          
+
           import java.util.ArrayList;
           import java.util.Locale;
           import java.util.regex.Matcher;
           import java.util.regex.Pattern;
-          
-          public class TtsPlaybackService extends Service implements TextToSpeech.OnInitListener {
-              public static final String ACTION_TOGGLE_WITH_TEXT = "com.guncelgelisim.TOGGLE_TEXT";
-              public static final String ACTION_TOGGLE = "com.guncelgelisim.TOGGLE";
-              public static final String ACTION_STOP = "com.guncelgelisim.STOP";
-              public static final String ACTION_SKIP = "com.guncelgelisim.SKIP";
-              public static final String ACTION_RATE = "com.guncelgelisim.RATE";
+
+          public class TtsPlaybackService extends Service
+                  implements TextToSpeech.OnInitListener {
+
+              public static final String ACTION_PLAY_TEXT =
+                      "com.guncelgelisim.PLAY_TEXT";
+              public static final String ACTION_TOGGLE =
+                      "com.guncelgelisim.TOGGLE";
+              public static final String ACTION_STOP =
+                      "com.guncelgelisim.STOP";
+              public static final String ACTION_SKIP =
+                      "com.guncelgelisim.SKIP";
+
               public static final String EXTRA_TITLE = "title";
               public static final String EXTRA_TEXT = "text";
               public static final String EXTRA_RATE = "rate";
               public static final String EXTRA_DELTA = "delta";
-          
+
               private static final String CHANNEL = "gelisim_tts";
               private static final int NOTIFICATION_ID = 1515;
+
               private TextToSpeech tts;
-              private boolean ttsReady = false;
+              private boolean ready = false;
               private boolean paused = false;
-              private boolean speaking = false;
+              private boolean playing = false;
               private float rate = 0.9f;
               private String title = "15 Dakikada Gelişim";
+
               private final ArrayList<String> chunks = new ArrayList<>();
               private int index = 0;
-              private MediaSessionCompat mediaSession;
+
+              private MediaSession mediaSession;
               private PowerManager.WakeLock wakeLock;
-          
-              @Override public void onCreate() {
+
+              @Override
+              public void onCreate() {
                   super.onCreate();
+
                   createChannel();
-                  tts = new TextToSpeech(this, this);
-                  mediaSession = new MediaSessionCompat(this, "GelisimTTS");
+
+                  mediaSession = new MediaSession(this, "GelisimTTS");
                   mediaSession.setActive(true);
-                  PowerManager pm = (PowerManager)getSystemService(POWER_SERVICE);
-                  wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "GelisimTTS:Playback");
+
+                  mediaSession.setCallback(new MediaSession.Callback() {
+                      @Override public void onPlay() { resumePlayback(); }
+                      @Override public void onPause() { pausePlayback(); }
+                      @Override public void onStop() { stopPlayback(); }
+                      @Override public void onSkipToNext() { skip(1); }
+                      @Override public void onSkipToPrevious() { skip(-1); }
+                  });
+
+                  PowerManager pm =
+                          (PowerManager) getSystemService(POWER_SERVICE);
+                  wakeLock = pm.newWakeLock(
+                          PowerManager.PARTIAL_WAKE_LOCK,
+                          "GelisimTTS:Playback");
+
+                  tts = new TextToSpeech(this, this);
               }
-          
-              @Override public int onStartCommand(Intent intent, int flags, int startId) {
+
+              @Override
+              public int onStartCommand(Intent intent, int flags, int startId) {
                   if (intent == null) return START_NOT_STICKY;
+
                   String action = intent.getAction();
-                  if (ACTION_TOGGLE_WITH_TEXT.equals(action)) {
-                      String incoming = intent.getStringExtra(EXTRA_TEXT);
-                      String incomingTitle = intent.getStringExtra(EXTRA_TITLE);
-                      float incomingRate = intent.getFloatExtra(EXTRA_RATE, rate);
-                      boolean same = incoming != null && !chunks.isEmpty() && incomingTitle != null && incomingTitle.equals(title);
-                      if (same) togglePause();
-                      else startNew(incomingTitle, incoming, incomingRate);
+
+                  if (ACTION_PLAY_TEXT.equals(action)) {
+                      String text = intent.getStringExtra(EXTRA_TEXT);
+                      String newTitle = intent.getStringExtra(EXTRA_TITLE);
+                      float newRate =
+                              intent.getFloatExtra(EXTRA_RATE, rate);
+
+                      boolean same =
+                              newTitle != null &&
+                              newTitle.equals(title) &&
+                              !chunks.isEmpty();
+
+                      if (same) {
+                          if (paused) resumePlayback();
+                          else pausePlayback();
+                      } else {
+                          startNew(newTitle, text, newRate);
+                      }
+
                   } else if (ACTION_TOGGLE.equals(action)) {
-                      togglePause();
+                      if (paused) resumePlayback();
+                      else pausePlayback();
+
                   } else if (ACTION_STOP.equals(action)) {
                       stopPlayback();
+
                   } else if (ACTION_SKIP.equals(action)) {
                       skip(intent.getIntExtra(EXTRA_DELTA, 1));
-                  } else if (ACTION_RATE.equals(action)) {
-                      rate = clamp(intent.getFloatExtra(EXTRA_RATE, rate));
-                      if (tts != null) tts.setSpeechRate(rate);
                   }
+
                   return START_NOT_STICKY;
               }
-          
-              private void startNew(String newTitle, String text, float newRate) {
-                  if (text == null || text.trim().isEmpty()) return;
-                  title = (newTitle == null || newTitle.trim().isEmpty()) ? "15 Dakikada Gelişim" : newTitle;
+
+              private void startNew(
+                      String newTitle,
+                      String text,
+                      float newRate) {
+
+                  if (text == null || text.trim().isEmpty()) {
+                      stopSelf();
+                      return;
+                  }
+
+                  title =
+                      newTitle == null || newTitle.trim().isEmpty()
+                          ? "15 Dakikada Gelişim"
+                          : newTitle;
+
                   rate = clamp(newRate);
+
                   chunks.clear();
                   chunks.addAll(split(text));
+
                   index = 0;
                   paused = false;
-                  speaking = true;
+                  playing = true;
+
                   ensureWakeLock();
-                  startForeground(NOTIFICATION_ID, buildNotification());
+
+                  startForeground(
+                          NOTIFICATION_ID,
+                          buildNotification());
+
                   updateMediaState();
-                  if (ttsReady) speakCurrent();
+
+                  if (ready) speakCurrent();
               }
-          
-              private void togglePause() {
+
+              private void pausePlayback() {
                   if (chunks.isEmpty()) return;
-                  if (speaking && !paused) {
-                      paused = true;
-                      speaking = false;
-                      if (tts != null) tts.stop();
-                  } else {
-                      paused = false;
-                      speaking = true;
-                      ensureWakeLock();
-                      if (ttsReady) speakCurrent();
-                  }
+
+                  paused = true;
+                  playing = false;
+
+                  if (tts != null) tts.stop();
+
                   updateNotification();
                   updateMediaState();
               }
-          
+
+              private void resumePlayback() {
+                  if (chunks.isEmpty()) return;
+
+                  paused = false;
+                  playing = true;
+
+                  ensureWakeLock();
+
+                  if (ready) speakCurrent();
+
+                  updateNotification();
+                  updateMediaState();
+              }
+
               private void skip(int delta) {
                   if (chunks.isEmpty()) return;
+
                   if (tts != null) tts.stop();
-                  index = Math.max(0, Math.min(chunks.size() - 1, index + delta));
+
+                  index = Math.max(
+                      0,
+                      Math.min(
+                          chunks.size() - 1,
+                          index + delta));
+
                   paused = false;
-                  speaking = true;
+                  playing = true;
+
                   ensureWakeLock();
-                  if (ttsReady) speakCurrent();
+
+                  if (ready) speakCurrent();
+
                   updateNotification();
+                  updateMediaState();
               }
-          
+
               private void stopPlayback() {
-                  speaking = false;
+                  playing = false;
                   paused = false;
+
                   if (tts != null) tts.stop();
+
                   chunks.clear();
                   index = 0;
+
                   releaseWakeLock();
+
                   if (mediaSession != null) {
-                      mediaSession.setPlaybackState(new PlaybackStateCompat.Builder().setState(PlaybackStateCompat.STATE_STOPPED, 0, 0f).build());
+                      PlaybackState ps =
+                          new PlaybackState.Builder()
+                              .setState(
+                                  PlaybackState.STATE_STOPPED,
+                                  0,
+                                  0f)
+                              .build();
+                      mediaSession.setPlaybackState(ps);
                   }
+
                   stopForeground(true);
                   stopSelf();
               }
-          
+
               private void speakCurrent() {
-                  if (!ttsReady || !speaking || paused || chunks.isEmpty()) return;
+                  if (!ready ||
+                      !playing ||
+                      paused ||
+                      chunks.isEmpty()) return;
+
                   if (index >= chunks.size()) {
                       stopPlayback();
                       return;
                   }
+
                   tts.setSpeechRate(rate);
-                  String utteranceId = "chunk-" + index;
-                  tts.speak(chunks.get(index), TextToSpeech.QUEUE_FLUSH, null, utteranceId);
+
+                  String utteranceId =
+                          "chunk-" + index;
+
+                  tts.speak(
+                      chunks.get(index),
+                      TextToSpeech.QUEUE_FLUSH,
+                      null,
+                      utteranceId);
+
                   updateNotification();
               }
-          
-              @Override public void onInit(int status) {
-                  if (status != TextToSpeech.SUCCESS) return;
-                  ttsReady = true;
-                  int r = tts.setLanguage(new Locale("tr", "TR"));
+
+              @Override
+              public void onInit(int status) {
+                  if (status != TextToSpeech.SUCCESS)
+                      return;
+
+                  ready = true;
+
+                  tts.setLanguage(
+                      new Locale("tr", "TR"));
+
                   tts.setSpeechRate(rate);
-                  tts.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build());
-                  tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-                      @Override public void onStart(String utteranceId) { }
-                      @Override public void onDone(String utteranceId) {
-                          if (!speaking || paused) return;
-                          index++;
-                          if (index >= chunks.size()) stopPlayback(); else speakCurrent();
-                      }
-                      @Override public void onError(String utteranceId) { speaking = false; paused = true; updateNotification(); }
-                  });
-                  if (speaking && !paused && !chunks.isEmpty()) speakCurrent();
+
+                  tts.setAudioAttributes(
+                      new AudioAttributes.Builder()
+                          .setUsage(
+                              AudioAttributes.USAGE_MEDIA)
+                          .setContentType(
+                              AudioAttributes.CONTENT_TYPE_SPEECH)
+                          .build());
+
+                  tts.setOnUtteranceProgressListener(
+                      new UtteranceProgressListener() {
+
+                          @Override
+                          public void onStart(
+                              String utteranceId) {}
+
+                          @Override
+                          public void onDone(
+                              String utteranceId) {
+
+                              if (!playing || paused)
+                                  return;
+
+                              index++;
+
+                              if (index >= chunks.size())
+                                  stopPlayback();
+                              else
+                                  speakCurrent();
+                          }
+
+                          @Override
+                          public void onError(
+                              String utteranceId) {
+
+                              paused = true;
+                              playing = false;
+
+                              updateNotification();
+                              updateMediaState();
+                          }
+                      });
+
+                  if (playing &&
+                      !paused &&
+                      !chunks.isEmpty()) {
+                      speakCurrent();
+                  }
               }
-          
+
               private ArrayList<String> split(String text) {
-                  ArrayList<String> out = new ArrayList<>();
-                  String cleaned = text.replace('\u00A0', ' ').replaceAll("\\s+", " ").trim();
-                  Pattern p = Pattern.compile("[^.!?…]+[.!?…]+|[^.!?…]+$");
-                  Matcher m = p.matcher(cleaned);
-                  StringBuilder b = new StringBuilder();
+                  ArrayList<String> out =
+                      new ArrayList<>();
+
+                  String cleaned =
+                      text.replace('\u00A0', ' ')
+                          .replaceAll("\\s+", " ")
+                          .trim();
+
+                  Pattern p =
+                      Pattern.compile(
+                          "[^.!?…]+[.!?…]+|[^.!?…]+$");
+
+                  Matcher m =
+                      p.matcher(cleaned);
+
+                  StringBuilder b =
+                      new StringBuilder();
+
                   while (m.find()) {
-                      String s = m.group().trim();
-                      if (b.length() > 0 && b.length() + s.length() > 700) {
-                          out.add(b.toString().trim());
+                      String sentence =
+                          m.group().trim();
+
+                      if (b.length() > 0 &&
+                          b.length() +
+                          sentence.length() > 700) {
+
+                          out.add(
+                              b.toString().trim());
+
                           b.setLength(0);
                       }
-                      if (b.length() > 0) b.append(' ');
-                      b.append(s);
+
+                      if (b.length() > 0)
+                          b.append(' ');
+
+                      b.append(sentence);
                   }
-                  if (b.length() > 0) out.add(b.toString().trim());
-                  if (out.isEmpty()) out.add(cleaned.length() > 3500 ? cleaned.substring(0, 3500) : cleaned);
+
+                  if (b.length() > 0)
+                      out.add(
+                          b.toString().trim());
+
+                  if (out.isEmpty())
+                      out.add(cleaned);
+
                   return out;
               }
-          
-              private float clamp(float v) { return Math.max(0.6f, Math.min(1.4f, v)); }
-          
+
+              private float clamp(float v) {
+                  return Math.max(
+                      0.6f,
+                      Math.min(1.4f, v));
+              }
+
               private void createChannel() {
                   if (Build.VERSION.SDK_INT >= 26) {
-                      NotificationChannel ch = new NotificationChannel(CHANNEL, "Sesli Dinleme", NotificationManager.IMPORTANCE_LOW);
-                      ch.setDescription("Ekran kapalıyken Türkçe TTS dinleme");
-                      getSystemService(NotificationManager.class).createNotificationChannel(ch);
+                      NotificationChannel ch =
+                          new NotificationChannel(
+                              CHANNEL,
+                              "Sesli Dinleme",
+                              NotificationManager.IMPORTANCE_LOW);
+
+                      ch.setDescription(
+                          "Ekran kapalıyken Türkçe TTS");
+
+                      getSystemService(
+                          NotificationManager.class)
+                          .createNotificationChannel(ch);
                   }
               }
-          
-              private PendingIntent serviceIntent(String action, int requestCode, int delta) {
-                  Intent i = new Intent(this, TtsPlaybackService.class).setAction(action).putExtra(EXTRA_DELTA, delta);
-                  return PendingIntent.getService(this, requestCode, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+              private PendingIntent serviceIntent(
+                      String action,
+                      int requestCode,
+                      int delta) {
+
+                  Intent i =
+                      new Intent(
+                          this,
+                          TtsPlaybackService.class);
+
+                  i.setAction(action);
+                  i.putExtra(
+                      EXTRA_DELTA,
+                      delta);
+
+                  return PendingIntent.getService(
+                      this,
+                      requestCode,
+                      i,
+                      PendingIntent.FLAG_UPDATE_CURRENT |
+                      PendingIntent.FLAG_IMMUTABLE);
               }
-          
+
               private Notification buildNotification() {
-                  Intent open = new Intent(this, MainActivity.class);
-                  PendingIntent content = PendingIntent.getActivity(this, 90, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-                  String progress = chunks.isEmpty() ? "" : (Math.min(index + 1, chunks.size()) + " / " + chunks.size());
-                  NotificationCompat.Builder b = new NotificationCompat.Builder(this, CHANNEL)
-                          .setSmallIcon(android.R.drawable.ic_media_play)
-                          .setContentTitle(title)
-                          .setContentText((paused ? "Duraklatıldı" : "Türkçe dinleniyor") + (progress.isEmpty() ? "" : " · " + progress))
-                          .setContentIntent(content)
-                          .setOnlyAlertOnce(true)
-                          .setOngoing(speaking && !paused)
-                          .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                          .addAction(android.R.drawable.ic_media_rew, "Geri", serviceIntent(ACTION_SKIP, 1, -1))
-                          .addAction(paused ? android.R.drawable.ic_media_play : android.R.drawable.ic_media_pause, paused ? "Devam" : "Duraklat", serviceIntent(ACTION_TOGGLE, 2, 0))
-                          .addAction(android.R.drawable.ic_media_ff, "İleri", serviceIntent(ACTION_SKIP, 3, 1))
-                          .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Durdur", serviceIntent(ACTION_STOP, 4, 0))
-                          .setStyle(new MediaStyle().setMediaSession(mediaSession.getSessionToken()).setShowActionsInCompactView(0,1,2));
-                  return b.build();
+                  Intent open =
+                      new Intent(
+                          this,
+                          MainActivity.class);
+
+                  PendingIntent content =
+                      PendingIntent.getActivity(
+                          this,
+                          90,
+                          open,
+                          PendingIntent.FLAG_UPDATE_CURRENT |
+                          PendingIntent.FLAG_IMMUTABLE);
+
+                  String progress =
+                      chunks.isEmpty()
+                          ? ""
+                          : (Math.min(
+                                  index + 1,
+                                  chunks.size())
+                              + " / "
+                              + chunks.size());
+
+                  Notification.Action prev =
+                      new Notification.Action.Builder(
+                          android.R.drawable.ic_media_rew,
+                          "Geri",
+                          serviceIntent(
+                              ACTION_SKIP,
+                              1,
+                              -1))
+                          .build();
+
+                  Notification.Action toggle =
+                      new Notification.Action.Builder(
+                          paused
+                              ? android.R.drawable.ic_media_play
+                              : android.R.drawable.ic_media_pause,
+                          paused
+                              ? "Devam"
+                              : "Duraklat",
+                          serviceIntent(
+                              ACTION_TOGGLE,
+                              2,
+                              0))
+                          .build();
+
+                  Notification.Action next =
+                      new Notification.Action.Builder(
+                          android.R.drawable.ic_media_ff,
+                          "İleri",
+                          serviceIntent(
+                              ACTION_SKIP,
+                              3,
+                              1))
+                          .build();
+
+                  Notification.Action stop =
+                      new Notification.Action.Builder(
+                          android.R.drawable.ic_menu_close_clear_cancel,
+                          "Durdur",
+                          serviceIntent(
+                              ACTION_STOP,
+                              4,
+                              0))
+                          .build();
+
+                  Notification.MediaStyle style =
+                      new Notification.MediaStyle()
+                          .setMediaSession(
+                              mediaSession.getSessionToken())
+                          .setShowActionsInCompactView(
+                              0, 1, 2);
+
+                  return new Notification.Builder(
+                          this,
+                          CHANNEL)
+                      .setSmallIcon(
+                          android.R.drawable.ic_media_play)
+                      .setContentTitle(title)
+                      .setContentText(
+                          (paused
+                              ? "Duraklatıldı"
+                              : "Türkçe dinleniyor")
+                          + (progress.isEmpty()
+                              ? ""
+                              : " · " + progress))
+                      .setContentIntent(content)
+                      .setOnlyAlertOnce(true)
+                      .setOngoing(playing && !paused)
+                      .setVisibility(
+                          Notification.VISIBILITY_PUBLIC)
+                      .addAction(prev)
+                      .addAction(toggle)
+                      .addAction(next)
+                      .addAction(stop)
+                      .setStyle(style)
+                      .build();
               }
-          
+
               private void updateNotification() {
                   if (chunks.isEmpty()) return;
-                  NotificationManager nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-                  nm.notify(NOTIFICATION_ID, buildNotification());
+
+                  NotificationManager nm =
+                      (NotificationManager)
+                          getSystemService(
+                              NOTIFICATION_SERVICE);
+
+                  nm.notify(
+                      NOTIFICATION_ID,
+                      buildNotification());
               }
-          
+
               private void updateMediaState() {
-                  int state = paused ? PlaybackStateCompat.STATE_PAUSED : speaking ? PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_STOPPED;
-                  mediaSession.setPlaybackState(new PlaybackStateCompat.Builder()
-                          .setActions(PlaybackStateCompat.ACTION_PLAY | PlaybackStateCompat.ACTION_PAUSE | PlaybackStateCompat.ACTION_PLAY_PAUSE | PlaybackStateCompat.ACTION_SKIP_TO_NEXT | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS | PlaybackStateCompat.ACTION_STOP)
-                          .setState(state, index, speaking ? 1f : 0f).build());
+                  if (mediaSession == null) return;
+
+                  int s =
+                      paused
+                          ? PlaybackState.STATE_PAUSED
+                          : playing
+                              ? PlaybackState.STATE_PLAYING
+                              : PlaybackState.STATE_STOPPED;
+
+                  long actions =
+                      PlaybackState.ACTION_PLAY |
+                      PlaybackState.ACTION_PAUSE |
+                      PlaybackState.ACTION_PLAY_PAUSE |
+                      PlaybackState.ACTION_SKIP_TO_NEXT |
+                      PlaybackState.ACTION_SKIP_TO_PREVIOUS |
+                      PlaybackState.ACTION_STOP;
+
+                  PlaybackState ps =
+                      new PlaybackState.Builder()
+                          .setActions(actions)
+                          .setState(
+                              s,
+                              index,
+                              playing ? 1f : 0f)
+                          .build();
+
+                  mediaSession.setPlaybackState(ps);
               }
-          
-              private void ensureWakeLock() { if (wakeLock != null && !wakeLock.isHeld()) wakeLock.acquire(6 * 60 * 60 * 1000L); }
-              private void releaseWakeLock() { if (wakeLock != null && wakeLock.isHeld()) wakeLock.release(); }
-          
-              @Override public IBinder onBind(Intent intent) { return null; }
-          
-              @Override public void onDestroy() {
-                  if (tts != null) { tts.stop(); tts.shutdown(); }
-                  if (mediaSession != null) mediaSession.release();
+
+              private void ensureWakeLock() {
+                  if (wakeLock != null &&
+                      !wakeLock.isHeld()) {
+                      wakeLock.acquire(
+                          6 * 60 * 60 * 1000L);
+                  }
+              }
+
+              private void releaseWakeLock() {
+                  if (wakeLock != null &&
+                      wakeLock.isHeld()) {
+                      wakeLock.release();
+                  }
+              }
+
+              @Override
+              public IBinder onBind(Intent intent) {
+                  return null;
+              }
+
+              @Override
+              public void onDestroy() {
+                  if (tts != null) {
+                      tts.stop();
+                      tts.shutdown();
+                  }
+
+                  if (mediaSession != null)
+                      mediaSession.release();
+
                   releaseWakeLock();
+
                   super.onDestroy();
               }
           }
-          EOF_APP_SRC_MAIN_JAVA_COM_GUNCELGELISIM_APP_TTSPLAYBACKSERVICE_JAVA
+          EOF
 
       - name: APK derle
         run: gradle :app:assembleDebug --stacktrace
@@ -467,9 +868,8 @@ jobs:
       - name: APK adını düzenle
         run: cp app/build/outputs/apk/debug/app-debug.apk 15-Dakikada-Gelisim.apk
 
-      - name: APK'yı indirilebilir yap
+      - name: APK yükle
         uses: actions/upload-artifact@v4
         with:
           name: 15-Dakikada-Gelisim-APK
           path: 15-Dakikada-Gelisim.apk
-          retention-days: 30
