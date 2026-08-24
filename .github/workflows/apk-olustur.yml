@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Java 17 kur
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -191,7 +191,7 @@ jobs:
                       if (text != null) i.putExtra(TtsPlaybackService.EXTRA_TEXT, text);
                       i.putExtra(TtsPlaybackService.EXTRA_RATE, rate);
                       i.putExtra(TtsPlaybackService.EXTRA_DELTA, delta);
-                      if (ACTION_TOGGLE_WITH_TEXT.equals(action) && Build.VERSION.SDK_INT >= 26) context.startForegroundService(i); else context.startService(i);
+                      if (TtsPlaybackService.ACTION_TOGGLE_WITH_TEXT.equals(action) && Build.VERSION.SDK_INT >= 26) context.startForegroundService(i); else context.startService(i);
                   }
           
                   @JavascriptInterface public void toggle(String title, String text, double rate) {
