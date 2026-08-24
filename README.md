@@ -1,10 +1,15 @@
-# 15 Dakikada Kitap v7
+# 15 Dakikada Gelişim v8
 
-- Kamu malı / Vikikaynak / Gutenberg / Open Library tamamen kaldırıldı.
-- EPUB/PDF/TXT ana ürün akışından kaldırıldı.
-- Yalnız güncel/popüler kurgu dışı kitapların Türkçe özetleri.
-- 6 genel + 6 yetişkin özeti.
-- Yetişkinler bölümü yerel 18+ onayı ile ayrı.
-- TTS yalnız Türkçe sistem sesi kullanır.
-- Yabancı dilde görünür veya dinlenebilir içerik yok.
-- “≈15 dk” süre ses seçimi ve hızına göre değişebilir.
+Toplam içerik: 57
+- Genel gelişim: 37
+- 18+ yetişkin: 8
+- Din & Hayat: 12
+
+Bu sürümde içerikler kitap tanıtımı şeklinde değildir.
+Her dinleme:
+1. Temel dersleri çıkarır.
+2. Günlük hayata çevirir.
+3. Somut uygulama görevleri verir.
+4. Dinleme sonu kişisel muhasebe sorularıyla biter.
+
+Tüm görünür ve dinlenen içerik Türkçedir.
