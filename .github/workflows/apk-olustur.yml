@@ -1,4 +1,4 @@
-name: APK Oluştur - Native TTS v5
+name: APK Oluştur - Native Alt Oynatıcı v6
 
 on:
   workflow_dispatch:
@@ -70,8 +70,8 @@ jobs:
                   applicationId 'com.guncelgelisim.app'
                   minSdk 26
                   targetSdk 35
-                  versionCode 4
-                  versionName '1.3.0'
+                  versionCode 5
+                  versionName '1.4.0'
               }
 
               compileOptions {
@@ -143,11 +143,20 @@ jobs:
           import android.content.pm.PackageManager;
           import android.os.Build;
           import android.os.Bundle;
+          import android.graphics.Color;
+          import android.view.Gravity;
+          import android.view.ViewGroup;
+          import android.widget.Button;
+          import android.widget.LinearLayout;
+          import android.widget.FrameLayout;
+          import android.widget.Toast;
           import android.webkit.JavascriptInterface;
           import android.webkit.WebChromeClient;
           import android.webkit.WebSettings;
           import android.webkit.WebView;
           import android.webkit.WebViewClient;
+          import org.json.JSONArray;
+          import org.json.JSONObject;
 
           public class MainActivity extends Activity {
               private static final String APP_URL =
@@ -165,8 +174,80 @@ jobs:
                               new String[]{Manifest.permission.POST_NOTIFICATIONS}, 10);
                   }
 
+                  FrameLayout root = new FrameLayout(this);
+
                   webView = new WebView(this);
-                  setContentView(webView);
+                  root.addView(
+                      webView,
+                      new FrameLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          ViewGroup.LayoutParams.MATCH_PARENT));
+
+                  LinearLayout controls = new LinearLayout(this);
+                  controls.setOrientation(LinearLayout.HORIZONTAL);
+                  controls.setGravity(Gravity.CENTER);
+                  controls.setPadding(8, 8, 8, 8);
+                  controls.setBackgroundColor(Color.rgb(24, 28, 31));
+
+                  Button testButton = new Button(this);
+                  testButton.setText("🔊 Test");
+
+                  Button playButton = new Button(this);
+                  playButton.setText("▶ Dinle");
+
+                  Button pauseButton = new Button(this);
+                  pauseButton.setText("⏯");
+
+                  Button stopButton = new Button(this);
+                  stopButton.setText("■");
+
+                  LinearLayout.LayoutParams small =
+                      new LinearLayout.LayoutParams(
+                          0,
+                          ViewGroup.LayoutParams.WRAP_CONTENT,
+                          1f);
+
+                  LinearLayout.LayoutParams large =
+                      new LinearLayout.LayoutParams(
+                          0,
+                          ViewGroup.LayoutParams.WRAP_CONTENT,
+                          2f);
+
+                  controls.addView(testButton, small);
+                  controls.addView(playButton, large);
+                  controls.addView(pauseButton, small);
+                  controls.addView(stopButton, small);
+
+                  FrameLayout.LayoutParams cp =
+                      new FrameLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          ViewGroup.LayoutParams.WRAP_CONTENT);
+
+                  cp.gravity = Gravity.BOTTOM;
+                  root.addView(controls, cp);
+
+                  webView.setPadding(0, 0, 0, 88);
+                  webView.setClipToPadding(false);
+
+                  setContentView(root);
+
+                  testButton.setOnClickListener(v ->
+                      startNativeText(
+                          "Ses Testi",
+                          "Türkçe ses sistemi çalışıyor. "
+                              + "Ekranı kapattığında da bu sesin devam etmesi gerekir.",
+                          0.9f));
+
+                  playButton.setOnClickListener(v ->
+                      playSelectedFromPage());
+
+                  pauseButton.setOnClickListener(v ->
+                      sendSimpleAction(
+                          TtsPlaybackService.ACTION_TOGGLE));
+
+                  stopButton.setOnClickListener(v ->
+                      sendSimpleAction(
+                          TtsPlaybackService.ACTION_STOP));
 
                   WebSettings s = webView.getSettings();
                   s.setJavaScriptEnabled(true);
@@ -182,87 +263,161 @@ jobs:
                       @Override
                       public void onPageFinished(WebView view, String url) {
                           super.onPageFinished(view, url);
-                          injectNativeTts();
+                          installNativeHint();
                       }
                   });
 
                   webView.loadUrl(APP_URL);
               }
 
-              private void injectNativeTts() {
+              private void installNativeHint() {
                   String js =
                       "javascript:(function(){" +
-                      "if(window.__NATIVE_TTS_V5__)return;" +
-                      "window.__NATIVE_TTS_V5__=true;" +
+                      "if(window.__ANDROID_NATIVE_BAR__)return;" +
+                      "window.__ANDROID_NATIVE_BAR__=true;" +
+                      "var p=document.querySelector('#play');" +
+                      "if(p){" +
+                      "p.textContent='↓ Android oynatıcıyı kullan';" +
+                      "p.disabled=true;" +
+                      "p.style.opacity='0.55';" +
+                      "}" +
+                      "})();";
+                  webView.evaluateJavascript(js, null);
+              }
 
-                      "function nativePayload(){" +
+              private void playSelectedFromPage() {
+                  String js =
+                      "(function(){" +
                       "var s=document.querySelector('#summary');" +
                       "var h=document.querySelector('#playerTitle');" +
                       "var r=document.querySelector('#rate');" +
-                      "return {" +
-                      "title:String(h&&h.innerText?h.innerText:'15 Dakikada Gelişim')," +
+                      "return JSON.stringify({" +
+                      "title:String(h&&h.innerText?h.innerText:'')," +
                       "text:String(s&&s.innerText?s.innerText:'').trim()," +
                       "rate:Number(r&&r.value?r.value:0.9)||0.9" +
-                      "};" +
-                      "}" +
+                      "});" +
+                      "})()";
 
-                      "function startNative(){" +
-                      "var p=nativePayload();" +
-                      "if(!p.text){" +
-                      "setTimeout(startNative,120);" +
-                      "return;" +
-                      "}" +
-                      "try{" +
-                      "if(window.speechSynthesis)window.speechSynthesis.cancel();" +
-                      "AndroidTTS.toggle(p.title,p.text,p.rate);" +
-                      "}catch(err){" +
-                      "console.error('Native TTS',err);" +
-                      "}" +
-                      "}" +
+                  webView.evaluateJavascript(
+                      js,
+                      value -> {
+                          try {
+                              if (value == null ||
+                                  "null".equals(value)) {
+                                  Toast.makeText(
+                                      this,
+                                      "Önce bir içerik aç.",
+                                      Toast.LENGTH_LONG)
+                                      .show();
+                                  return;
+                              }
 
-                      "document.addEventListener('click',function(e){" +
-                      "var el=e.target&&e.target.closest?e.target.closest('button'):null;" +
-                      "if(!el)return;" +
+                              String decoded =
+                                  new JSONArray(
+                                      "[" + value + "]")
+                                      .getString(0);
 
-                      // Card Dinle: target onclick has already opened the player
-                      "if(el.classList&&el.classList.contains('listen')){" +
-                      "setTimeout(startNative,180);" +
-                      "return;" +
-                      "}" +
+                              JSONObject o =
+                                  new JSONObject(decoded);
 
-                      // Main play button: cancel browser TTS, native toggle
-                      "if(el.id==='play'){" +
-                      "setTimeout(function(){" +
-                      "if(window.speechSynthesis)window.speechSynthesis.cancel();" +
-                      "startNative();" +
-                      "},20);" +
-                      "return;" +
-                      "}" +
+                              String title =
+                                  o.optString(
+                                      "title",
+                                      "15 Dakikada Gelişim");
 
-                      "if(el.id==='back'){" +
-                      "setTimeout(function(){" +
-                      "if(window.speechSynthesis)window.speechSynthesis.cancel();" +
-                      "AndroidTTS.skip(-1);" +
-                      "},20);" +
-                      "return;" +
-                      "}" +
+                              String text =
+                                  o.optString("text", "");
 
-                      "if(el.id==='forward'){" +
-                      "setTimeout(function(){" +
-                      "if(window.speechSynthesis)window.speechSynthesis.cancel();" +
-                      "AndroidTTS.skip(1);" +
-                      "},20);" +
-                      "return;" +
-                      "}" +
+                              float rate =
+                                  (float) o.optDouble(
+                                      "rate",
+                                      0.9);
 
-                      "if(el.id==='closePlayer'){" +
-                      "AndroidTTS.stop();" +
-                      "}" +
-                      "},false);" +
+                              if (text.trim().isEmpty()) {
+                                  Toast.makeText(
+                                      this,
+                                      "Önce bir içerik kartına dokunup "
+                                          + "özet ekranını aç.",
+                                      Toast.LENGTH_LONG)
+                                      .show();
+                                  return;
+                              }
 
-                      "})();";
+                              startNativeText(
+                                  title,
+                                  text,
+                                  rate);
 
-                  webView.evaluateJavascript(js, null);
+                          } catch (Exception ex) {
+                              Toast.makeText(
+                                  this,
+                                  "Metin alınamadı: "
+                                      + ex.getClass().getSimpleName(),
+                                  Toast.LENGTH_LONG)
+                                  .show();
+                          }
+                      });
+              }
+
+              private void startNativeText(
+                      String title,
+                      String text,
+                      float rate) {
+
+                  Intent i =
+                      new Intent(
+                          this,
+                          TtsPlaybackService.class);
+
+                  i.setAction(
+                      TtsPlaybackService.ACTION_PLAY_TEXT);
+
+                  i.putExtra(
+                      TtsPlaybackService.EXTRA_TITLE,
+                      title);
+
+                  i.putExtra(
+                      TtsPlaybackService.EXTRA_TEXT,
+                      text);
+
+                  i.putExtra(
+                      TtsPlaybackService.EXTRA_RATE,
+                      rate);
+
+                  try {
+                      if (Build.VERSION.SDK_INT >= 26)
+                          startForegroundService(i);
+                      else
+                          startService(i);
+                  } catch (Exception ex) {
+                      Toast.makeText(
+                          this,
+                          "Ses başlatılamadı: "
+                              + ex.getClass().getSimpleName(),
+                          Toast.LENGTH_LONG)
+                          .show();
+                  }
+              }
+
+              private void sendSimpleAction(
+                      String action) {
+
+                  Intent i =
+                      new Intent(
+                          this,
+                          TtsPlaybackService.class);
+
+                  i.setAction(action);
+
+                  try {
+                      startService(i);
+                  } catch (Exception ex) {
+                      Toast.makeText(
+                          this,
+                          "Ses kontrolü çalışmadı.",
+                          Toast.LENGTH_SHORT)
+                          .show();
+                  }
               }
 
               public static class AndroidTtsBridge {
