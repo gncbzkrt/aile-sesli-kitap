@@ -94,14 +94,34 @@
     <div id="featuredShelves"></div>
   </section>
 
+  <section id="adultSection" class="section">
+    <div class="adult-hero">
+      <div>
+        <div class="mini-label">18+ · YETİŞKİNLER</div>
+        <h2>İlişkiler · Yakınlık · Cinsellik</h2>
+        <p>Güncel ve popüler kurgu dışı kitaplardan özgün Türkçe sesli özetler. Ana fikirler, ilişki dinamikleri ve uygulanabilir çıkarımlar.</p>
+      </div>
+      <button id="adultUnlockBtn" class="btn adult-btn">18+ Bölümünü Aç</button>
+    </div>
+    <div id="adultLocked" class="adult-locked">
+      <div class="adult-lock-icon">🔒</div>
+      <strong>Bu bölüm yetişkinlere yöneliktir.</strong>
+      <span>İçerik eğitim ve ilişki sağlığı odaklıdır; ana katalogdan ayrı tutulur.</span>
+    </div>
+    <div id="adultContent" class="hidden">
+      <div id="adultChips" class="chips"></div>
+      <div id="adultRail" class="rail adult-rail"></div>
+    </div>
+  </section>
+
   <section id="sourceHubSection" class="section">
     <div class="source-hero">
       <div>
-        <div class="mini-label">v5.0 LTS · DONDURULMUŞ KAYNAK MOTORU</div>
+        <div class="mini-label">v6.1 · TÜRKÇE KAYNAK MOTORU</div>
         <h2>Tüm Türkçe Kaynaklarda Ara</h2>
-        <p>Tek arama: düzenlenmiş klasikler, Vikikaynak, Open Library açık tam metinleri ve Project Gutenberg.</p>
+        <p>Tek arama: düzenlenmiş klasikler, Vikikaynak, Açık Kitaplık açık tam metinleri ve Gutenberg Projesi.</p>
       </div>
-      <span class="frozen-badge">❄ FROZEN</span>
+      <span class="frozen-badge">✓ TÜRKÇE</span>
     </div>
     <div class="search-row source-search">
       <input id="globalSourceSearch" type="search" placeholder="Kitap veya yazar ara…">
@@ -290,6 +310,20 @@
   </div>
 </div>
 
+<!-- Adult confirmation -->
+<div id="adultConfirmModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head"><h2>18+ Yetişkinler</h2><button data-close>×</button></div>
+    <p class="muted">Bu bölüm ilişkiler, yakınlık, cinsellik, çift iletişimi ve beden farkındalığı hakkında yetişkinlere yönelik eğitim içerikleri içerir.</p>
+    <label class="adult-confirm-row">
+      <input id="adultConfirmCheck" type="checkbox">
+      <span>18 yaş ve üzerindeyim.</span>
+    </label>
+    <button id="adultConfirmBtn" class="btn adult-btn full">Yetişkinler Bölümünü Aç</button>
+    <p class="source-note">Onay yalnız bu cihazda saklanır. Ayarlar'dan tekrar kilitleyebilirsin.</p>
+  </div>
+</div>
+
 <!-- Settings -->
 <div id="settingsModal" class="modal hidden">
   <div class="modal-card">
@@ -304,6 +338,7 @@
     <button id="historyBtn" class="btn secondary full">Dinleme Geçmişi</button>
     <button id="statsBtn" class="btn secondary full">Dinleme İstatistiklerim</button>
     <button id="sourcesBtn" class="btn secondary full">Kaynak Durumu</button>
+    <button id="adultLockBtn" class="btn secondary full">18+ Bölümünü Kilitle</button>
     <button id="storageBtn" class="btn secondary full">Depolama Kullanımı</button>
     <button id="clearBtn" class="btn danger full">Tüm Yerel Verileri Sil</button>
     <p class="source-note">TTS sesleri telefonunda yüklü olan sistem seslerinden gelir. Ses seçenekleri Android ve iPhone modeline göre değişebilir.</p>

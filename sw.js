@@ -1,4 +1,4 @@
-const CACHE="sesli-kitaplik-v5-0-2-filtered-strict";
+const CACHE="sesli-kitaplik-v6-1-yuzde100-turkce";
 const ASSETS=["./","./index.html","./styles.css","./app.js","./manifest.webmanifest","./icons/icon-192.svg","./icons/icon-512.svg"];
 self.addEventListener("install",e=>{
   self.skipWaiting();

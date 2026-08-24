@@ -1,5 +1,5 @@
 {
-  "version": "5.0.2-LTS-FILTERED-STRICT",
+  "version": "6.1.0-YUZDE100-TURKCE",
   "frozenAt": "2026-08-23",
   "scope": "Turkish audiobook / TTS PWA",
   "sources": [
@@ -52,7 +52,7 @@
     "deduplication",
     "15-minute curated summaries"
   ],
-  "frozen": true,
+  "frozen": false,
   "filterPolicy": {
     "goal": "Only books and literary works in user-facing archive/search",
     "excludedExamples": [
@@ -77,5 +77,19 @@
       "document-like uppercase title rejection"
     ],
     "strictPatch": "Normalized substring blacklist + structured-document compound checks + archive cache v2"
+  },
+  "branchFrom": "5.0.2-LTS-FILTERED-STRICT",
+  "adultCategory": {
+    "local18PlusGate": true,
+    "summaryCount": 12,
+    "contentMode": "original Turkish summaries, no copyrighted full text"
+  },
+  "languagePolicy": {
+    "visibleLanguage": "tr",
+    "audioLanguage": "tr-TR",
+    "foreignTitlesVisible": false,
+    "foreignFullTextAllowed": false,
+    "externalTextValidatedBeforeImport": true,
+    "ttsVoices": "Turkish voices only"
   }
 }

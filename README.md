@@ -1,3 +1,19 @@
+# Sesli Kitaplık v6.1 — %100 Türkçe
+
+- Yabancı dilde kitap, özet, açıklama veya ses kullanıcıya gösterilmez.
+- Dış kaynak metni kitaplığa eklenmeden önce Türkçe kontrolünden geçer.
+- TTS menüsünde yalnız Türkçe sesler kullanılır; yabancı ses yedeği yoktur.
+- EPUB/PDF/TXT içe aktarmada da yalnız Türkçe içerik kabul edilir.
+- Yetişkin özetlerinin görünen başlıkları Türkçedir.
+
+# Sesli Kitaplık v6.0 — Güncel Özetler + 18+ Yetişkinler
+
+- Ayrı 18+ yetişkin kategorisi
+- 12 ilişki/yakınlık/cinsellik kitabı
+- Özgün Türkçe özet + cihaz TTS
+- Yerel 18+ onayı
+- Tam telifli kitap metni içermez
+
 # v5.0.2 LTS FILTERED STRICT
 
 Son filtre yaması:
