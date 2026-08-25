@@ -470,29 +470,21 @@ jobs:
                   s.append("Bu dinlemenin amacı ").append(x.title)
                    .append(" konusunda sana yalnız bilgi vermek değil; ")
                    .append(x.focus==null?"bu alanı":x.focus)
-                   .append(" günlük davranışa çevirmene yardım etmektir.
-
-");
+                   .append(" günlük davranışa çevirmene yardım etmektir.\n\n");
 
                   for(int i=0;i<x.principles.size();i++) {
                       s.append(i+1).append(". temel ders: ")
                        .append(x.principles.get(i))
                        .append(" Bu fikri son bir haftadan gerçek bir örnekle ilişkilendir. ")
-                       .append("Soyut bilgiyi somut davranışa çevirmek değişimi kolaylaştırır.
-
-");
+                       .append("Soyut bilgiyi somut davranışa çevirmek değişimi kolaylaştırır.\n\n");
                   }
 
-                  s.append("Şimdi teoriden uygulamaya geçelim. Aynı anda her şeyi değiştirmeye çalışma.
-
-");
+                  s.append("Şimdi teoriden uygulamaya geçelim. Aynı anda her şeyi değiştirmeye çalışma.\n\n");
 
                   for(int i=0;i<x.actions.size();i++) {
                       s.append("Uygulama ").append(i+1).append(": ")
                        .append(x.actions.get(i))
-                       .append(" Bunu küçük ve bugün uygulanabilir hale getir.
-
-");
+                       .append(" Bunu küçük ve bugün uygulanabilir hale getir.\n\n");
                   }
 
                   s.append("Dinleme sonrası muhasebe: Bugün hangi fikri benimsedim? ")
