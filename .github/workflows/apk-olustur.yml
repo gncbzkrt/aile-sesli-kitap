@@ -1,4 +1,4 @@
-name: APK Oluştur - Tam Native v9
+name: APK Oluştur - Native Şık Arayüz v10
 
 on:
   workflow_dispatch:
@@ -58,8 +58,8 @@ jobs:
                   applicationId 'com.guncelgelisim.app'
                   minSdk 26
                   targetSdk 35
-                  versionCode 8
-                  versionName '2.0.0'
+                  versionCode 9
+                  versionName '2.1.0'
               }
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_17
@@ -115,10 +115,13 @@ jobs:
           import android.content.Intent;
           import android.content.pm.PackageManager;
           import android.graphics.Color;
+          import android.graphics.Typeface;
+          import android.graphics.drawable.GradientDrawable;
           import android.os.Build;
           import android.os.Bundle;
           import android.text.Editable;
           import android.text.TextWatcher;
+          import android.view.Gravity;
           import android.view.View;
           import android.view.ViewGroup;
           import android.widget.AdapterView;
@@ -129,6 +132,7 @@ jobs:
           import android.widget.LinearLayout;
           import android.widget.ListView;
           import android.widget.ProgressBar;
+          import android.widget.ScrollView;
           import android.widget.Spinner;
           import android.widget.TextView;
           import android.widget.Toast;
@@ -181,37 +185,74 @@ jobs:
                   return (int)(v * getResources().getDisplayMetrics().density + .5f);
               }
 
-              private TextView tv(String s, int size, int color) {
+              private GradientDrawable rounded(int color, int strokeColor, int radiusDp, int strokeDp) {
+                  GradientDrawable d = new GradientDrawable();
+                  d.setColor(color);
+                  d.setCornerRadius(dp(radiusDp));
+                  if (strokeDp > 0) d.setStroke(dp(strokeDp), strokeColor);
+                  return d;
+              }
+
+              private TextView tv(String s, int size, int color, boolean bold) {
                   TextView t = new TextView(this);
                   t.setText(s);
                   t.setTextSize(size);
                   t.setTextColor(color);
+                  if (bold) t.setTypeface(null, Typeface.BOLD);
                   return t;
+              }
+
+              private void styleActionButton(Button b, int bg, int textColor) {
+                  b.setAllCaps(false);
+                  b.setTextColor(textColor);
+                  b.setBackground(rounded(bg, Color.TRANSPARENT, 14, 0));
+                  b.setPadding(dp(14), dp(10), dp(14), dp(10));
               }
 
               private void buildUi() {
                   LinearLayout root = new LinearLayout(this);
                   root.setOrientation(LinearLayout.VERTICAL);
-                  root.setBackgroundColor(Color.rgb(12,15,17));
-                  root.setPadding(dp(14),dp(12),dp(14),dp(10));
+                  root.setBackgroundColor(Color.rgb(9,12,15));
+                  root.setPadding(dp(14), dp(12), dp(14), dp(10));
 
-                  TextView title = tv("15 DAKİKADA GELİŞİM",21,Color.WHITE);
-                  title.setTypeface(null,android.graphics.Typeface.BOLD);
-                  root.addView(title);
+                  LinearLayout hero = new LinearLayout(this);
+                  hero.setOrientation(LinearLayout.VERTICAL);
+                  hero.setPadding(dp(16), dp(16), dp(16), dp(16));
+                  hero.setBackground(rounded(Color.rgb(14,22,32), Color.rgb(36,46,58), 24, 1));
 
-                  TextView sub = tv("Native Android · Türkçe · Ekran kapalı dinleme",12,Color.rgb(150,158,164));
-                  root.addView(sub);
+                  TextView brand = tv("TÜRKÇE · GELİŞİM · REKLAMSIZ", 11, Color.rgb(240,166,42), true);
+                  hero.addView(brand);
+
+                  TextView title = tv("15 Dakikada Gelişim", 24, Color.WHITE, true);
+                  LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                  tlp.setMargins(0, dp(4), 0, dp(6));
+                  hero.addView(title, tlp);
+
+                  TextView sub = tv(
+                      "Native Android oynatıcı · Türkçe ses · ekran kapalı dinleme",
+                      13, Color.rgb(170,177,182), false);
+                  hero.addView(sub);
 
                   LinearLayout top = new LinearLayout(this);
                   top.setOrientation(LinearLayout.HORIZONTAL);
+                  LinearLayout.LayoutParams topLp = new LinearLayout.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                  topLp.setMargins(0, dp(12), 0, 0);
+                  hero.addView(top, topLp);
 
                   Button refresh = new Button(this);
-                  refresh.setText("↻ Katalog");
+                  refresh.setText("↻ Kataloğu Güncelle");
+                  styleActionButton(refresh, Color.rgb(240,166,42), Color.rgb(20,20,20));
                   refresh.setOnClickListener(v -> loadCatalog());
-                  top.addView(refresh,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1f));
+                  top.addView(refresh, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+                  View spacer = new View(this);
+                  top.addView(spacer, new LinearLayout.LayoutParams(dp(8), 1));
 
                   Button adult = new Button(this);
                   adult.setText("18+ Aç");
+                  styleActionButton(adult, Color.rgb(31,38,46), Color.WHITE);
                   adult.setOnClickListener(v -> {
                       if (!adultUnlocked) {
                           new AlertDialog.Builder(this)
@@ -221,58 +262,87 @@ jobs:
                               .setPositiveButton("18 yaş ve üzerindeyim",(d,w)->{
                                   adultUnlocked=true;
                                   adult.setText("18+ Kapat");
+                                  styleActionButton(adult, Color.rgb(92,44,66), Color.WHITE);
                                   rebuildCats();
                                   filter();
                               }).show();
                       } else {
                           adultUnlocked=false;
                           adult.setText("18+ Aç");
+                          styleActionButton(adult, Color.rgb(31,38,46), Color.WHITE);
                           rebuildCats();
                           filter();
                       }
                   });
-                  top.addView(adult,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1f));
-                  root.addView(top);
+                  top.addView(adult, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+                  root.addView(hero);
 
                   search = new EditText(this);
                   search.setHint("Konu, kitap, yazar veya beceri ara…");
                   search.setHintTextColor(Color.rgb(120,128,134));
                   search.setTextColor(Color.WHITE);
                   search.setSingleLine(true);
-                  search.setBackgroundColor(Color.rgb(23,28,31));
-                  search.setPadding(dp(12),dp(10),dp(12),dp(10));
-                  root.addView(search,new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT));
+                  search.setBackground(rounded(Color.rgb(17,22,27), Color.rgb(35,43,50), 18, 1));
+                  search.setPadding(dp(14), dp(12), dp(14), dp(12));
+                  LinearLayout.LayoutParams searchLp = new LinearLayout.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                  searchLp.setMargins(0, dp(12), 0, dp(8));
+                  root.addView(search, searchLp);
+
+                  LinearLayout filterBox = new LinearLayout(this);
+                  filterBox.setOrientation(LinearLayout.VERTICAL);
+                  filterBox.setPadding(dp(12), dp(10), dp(12), dp(10));
+                  filterBox.setBackground(rounded(Color.rgb(14,18,23), Color.rgb(33,40,48), 18, 1));
+
+                  TextView catLabel = tv("Kategori", 12, Color.rgb(145,154,160), true);
+                  filterBox.addView(catLabel);
 
                   spinner = new Spinner(this);
-                  root.addView(spinner);
+                  filterBox.addView(spinner);
+                  root.addView(filterBox);
 
-                  count = tv("Katalog yükleniyor…",13,Color.rgb(170,177,182));
-                  root.addView(count);
+                  count = tv("Katalog yükleniyor…", 13, Color.rgb(182,188,193), false);
+                  LinearLayout.LayoutParams countLp = new LinearLayout.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                  countLp.setMargins(0, dp(10), 0, dp(6));
+                  root.addView(count, countLp);
 
                   progress = new ProgressBar(this);
                   root.addView(progress);
 
                   list = new ListView(this);
-                  list.setDividerHeight(dp(8));
+                  list.setDivider(null);
+                  list.setDividerHeight(dp(10));
+                  list.setVerticalScrollBarEnabled(false);
                   list.setBackgroundColor(Color.TRANSPARENT);
                   adapter = new BooksAdapter();
                   list.setAdapter(adapter);
-                  root.addView(list,new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,0,1f));
+                  root.addView(list, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
                   LinearLayout player = new LinearLayout(this);
                   player.setOrientation(LinearLayout.HORIZONTAL);
+                  player.setPadding(dp(8), dp(8), dp(8), dp(8));
+                  player.setBackground(rounded(Color.rgb(14,18,23), Color.rgb(33,40,48), 20, 1));
 
                   Button pause = new Button(this);
                   pause.setText("⏯ Duraklat / Devam");
+                  styleActionButton(pause, Color.rgb(31,38,46), Color.WHITE);
                   pause.setOnClickListener(v -> sendAction(TtsPlaybackService.ACTION_TOGGLE));
 
                   Button stop = new Button(this);
                   stop.setText("■ Durdur");
+                  styleActionButton(stop, Color.rgb(92,44,44), Color.WHITE);
                   stop.setOnClickListener(v -> sendAction(TtsPlaybackService.ACTION_STOP));
 
-                  player.addView(pause,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,2f));
-                  player.addView(stop,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1f));
-                  root.addView(player);
+                  player.addView(pause, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 2f));
+                  View gap = new View(this);
+                  player.addView(gap, new LinearLayout.LayoutParams(dp(8), 1));
+                  player.addView(stop, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+                  LinearLayout.LayoutParams playerLp = new LinearLayout.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                  playerLp.setMargins(0, dp(8), 0, 0);
+                  root.addView(player, playerLp);
 
                   setContentView(root);
 
@@ -389,7 +459,7 @@ jobs:
                       shown.add(b);
                   }
 
-                  count.setText(shown.size()+" içerik · toplam "+all.size());
+                  count.setText(shown.size()+" içerik · toplam "+all.size()+" Türkçe dinleme");
                   adapter.notifyDataSetChanged();
               }
 
@@ -400,21 +470,29 @@ jobs:
                   s.append("Bu dinlemenin amacı ").append(x.title)
                    .append(" konusunda sana yalnız bilgi vermek değil; ")
                    .append(x.focus==null?"bu alanı":x.focus)
-                   .append(" günlük davranışa çevirmene yardım etmektir.\n\n");
+                   .append(" günlük davranışa çevirmene yardım etmektir.
+
+");
 
                   for(int i=0;i<x.principles.size();i++) {
                       s.append(i+1).append(". temel ders: ")
                        .append(x.principles.get(i))
                        .append(" Bu fikri son bir haftadan gerçek bir örnekle ilişkilendir. ")
-                       .append("Soyut bilgiyi somut davranışa çevirmek değişimi kolaylaştırır.\n\n");
+                       .append("Soyut bilgiyi somut davranışa çevirmek değişimi kolaylaştırır.
+
+");
                   }
 
-                  s.append("Şimdi teoriden uygulamaya geçelim. Aynı anda her şeyi değiştirmeye çalışma.\n\n");
+                  s.append("Şimdi teoriden uygulamaya geçelim. Aynı anda her şeyi değiştirmeye çalışma.
+
+");
 
                   for(int i=0;i<x.actions.size();i++) {
                       s.append("Uygulama ").append(i+1).append(": ")
                        .append(x.actions.get(i))
-                       .append(" Bunu küçük ve bugün uygulanabilir hale getir.\n\n");
+                       .append(" Bunu küçük ve bugün uygulanabilir hale getir.
+
+");
                   }
 
                   s.append("Dinleme sonrası muhasebe: Bugün hangi fikri benimsedim? ")
@@ -439,9 +517,9 @@ jobs:
               }
 
               private void read(Book b) {
-                  TextView body=tv(lesson(b),16,Color.rgb(35,35,35));
+                  TextView body=tv(lesson(b),16,Color.rgb(35,35,35),false);
                   body.setPadding(dp(16),dp(10),dp(16),dp(10));
-                  android.widget.ScrollView sc=new android.widget.ScrollView(this);
+                  ScrollView sc=new ScrollView(this);
                   sc.addView(body);
 
                   new AlertDialog.Builder(this)
@@ -471,36 +549,64 @@ jobs:
 
                       LinearLayout row=new LinearLayout(MainActivity.this);
                       row.setOrientation(LinearLayout.VERTICAL);
-                      row.setPadding(dp(12),dp(10),dp(12),dp(10));
-                      row.setBackgroundColor(
-                          b.religion?Color.rgb(25,46,31):
-                          b.adult?Color.rgb(55,28,42):
-                          Color.rgb(20,25,28));
+                      row.setPadding(dp(14),dp(14),dp(14),dp(12));
 
-                      TextView t=tv(b.title,19,Color.WHITE);
-                      t.setTypeface(null,android.graphics.Typeface.BOLD);
-                      row.addView(t);
+                      int bg = b.religion ? Color.rgb(22,39,30) : b.adult ? Color.rgb(47,26,37) : Color.rgb(14,18,23);
+                      int stroke = b.religion ? Color.rgb(52,83,61) : b.adult ? Color.rgb(90,55,72) : Color.rgb(33,40,48);
+                      row.setBackground(rounded(bg, stroke, 22, 1));
 
-                      TextView meta=tv(b.author+" · "+b.category+" · "+b.duration,13,Color.rgb(175,181,185));
+                      TextView chip=tv(b.category.isEmpty()?"GELİŞİM":b.category.toUpperCase(new Locale("tr","TR")),11,Color.WHITE,true);
+                      chip.setBackground(rounded(Color.rgb(36,52,68), Color.TRANSPARENT, 999, 0));
+                      chip.setPadding(dp(10),dp(5),dp(10),dp(5));
+                      LinearLayout.LayoutParams chipLp=new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+                      row.addView(chip, chipLp);
+
+                      TextView t=tv(b.title,21,Color.WHITE,true);
+                      LinearLayout.LayoutParams tLp=new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+                      tLp.setMargins(0,dp(12),0,dp(6));
+                      row.addView(t,tLp);
+
+                      TextView meta=tv(b.author+" · "+b.duration,13,Color.rgb(175,181,185),false);
                       row.addView(meta);
+
+                      if(b.focus!=null && !b.focus.isEmpty()) {
+                          TextView focus=tv(b.focus,13,Color.rgb(240,166,42),false);
+                          LinearLayout.LayoutParams fLp=new LinearLayout.LayoutParams(
+                              ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+                          fLp.setMargins(0,dp(8),0,0);
+                          row.addView(focus,fLp);
+                      }
 
                       LinearLayout buttons=new LinearLayout(MainActivity.this);
                       buttons.setOrientation(LinearLayout.HORIZONTAL);
+                      LinearLayout.LayoutParams blp=new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+                      blp.setMargins(0,dp(14),0,0);
 
                       Button listen=new Button(MainActivity.this);
                       listen.setText("▶ DİNLE");
+                      styleActionButton(listen, Color.rgb(240,166,42), Color.rgb(18,18,18));
                       listen.setOnClickListener(v -> play(b));
 
                       Button read=new Button(MainActivity.this);
                       read.setText("OKU");
+                      styleActionButton(read, Color.rgb(31,38,46), Color.WHITE);
                       read.setOnClickListener(v -> read(b));
 
                       buttons.addView(listen,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,2f));
+                      View g2=new View(MainActivity.this);
+                      buttons.addView(g2,new LinearLayout.LayoutParams(dp(8),1));
                       buttons.addView(read,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1f));
-                      row.addView(buttons);
+                      row.addView(buttons,blp);
 
+                      LinearLayout wrapper = new LinearLayout(MainActivity.this);
+                      wrapper.setPadding(0,0,0,dp(10));
+                      wrapper.addView(row,new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                       row.setOnClickListener(v -> read(b));
-                      return row;
+                      return wrapper;
                   }
               }
 
@@ -512,6 +618,7 @@ jobs:
               }
           }
           EOF
+
 
           cat > app/src/main/java/com/guncelgelisim/app/TtsPlaybackService.java <<'EOF'
           package com.guncelgelisim.app;
@@ -1117,10 +1224,10 @@ jobs:
         run: gradle :app:assembleDebug --stacktrace
 
       - name: APK adını düzenle
-        run: cp app/build/outputs/apk/debug/app-debug.apk 15-Dakikada-Gelisim-v9.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk 15-Dakikada-Gelisim-v10.apk
 
       - name: APK yükle
         uses: actions/upload-artifact@v4
         with:
-          name: 15-Dakikada-Gelisim-v9-APK
-          path: 15-Dakikada-Gelisim-v9.apk
+          name: 15-Dakikada-Gelisim-v10-APK
+          path: 15-Dakikada-Gelisim-v10.apk
