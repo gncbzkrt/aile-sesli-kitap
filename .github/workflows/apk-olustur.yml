@@ -1,4 +1,4 @@
-name: APK Oluştur - Native Şık Arayüz v10
+name: APK Oluştur - KitUP Kartlar v11
 
 on:
   workflow_dispatch:
@@ -58,8 +58,8 @@ jobs:
                   applicationId 'com.guncelgelisim.app'
                   minSdk 26
                   targetSdk 35
-                  versionCode 9
-                  versionName '2.1.0'
+                  versionCode 10
+                  versionName '2.2.0'
               }
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_17
@@ -124,16 +124,14 @@ jobs:
           import android.view.Gravity;
           import android.view.View;
           import android.view.ViewGroup;
-          import android.widget.AdapterView;
-          import android.widget.ArrayAdapter;
           import android.widget.BaseAdapter;
           import android.widget.Button;
           import android.widget.EditText;
+          import android.widget.GridView;
+          import android.widget.HorizontalScrollView;
           import android.widget.LinearLayout;
-          import android.widget.ListView;
           import android.widget.ProgressBar;
           import android.widget.ScrollView;
-          import android.widget.Spinner;
           import android.widget.TextView;
           import android.widget.Toast;
 
@@ -156,14 +154,15 @@ jobs:
 
               private final ArrayList<Book> all = new ArrayList<>();
               private final ArrayList<Book> shown = new ArrayList<>();
-              private final ArrayList<String> cats = new ArrayList<>();
 
-              private ListView list;
-              private Spinner spinner;
+              private GridView grid;
               private EditText search;
               private TextView count;
               private ProgressBar progress;
+              private LinearLayout categoryBar;
               private BooksAdapter adapter;
+
+              private String currentCategory = "Öne Çıkanlar";
               private boolean adultUnlocked = false;
 
               @Override
@@ -185,7 +184,8 @@ jobs:
                   return (int)(v * getResources().getDisplayMetrics().density + .5f);
               }
 
-              private GradientDrawable rounded(int color, int strokeColor, int radiusDp, int strokeDp) {
+              private GradientDrawable rounded(
+                      int color, int strokeColor, int radiusDp, int strokeDp) {
                   GradientDrawable d = new GradientDrawable();
                   d.setColor(color);
                   d.setCornerRadius(dp(radiusDp));
@@ -202,160 +202,225 @@ jobs:
                   return t;
               }
 
-              private void styleActionButton(Button b, int bg, int textColor) {
+              private void styleButton(Button b, int bg, int fg) {
                   b.setAllCaps(false);
-                  b.setTextColor(textColor);
+                  b.setTextColor(fg);
+                  b.setTextSize(13);
+                  b.setTypeface(null, Typeface.BOLD);
                   b.setBackground(rounded(bg, Color.TRANSPARENT, 14, 0));
-                  b.setPadding(dp(14), dp(10), dp(14), dp(10));
+                  b.setPadding(dp(10), dp(8), dp(10), dp(8));
               }
 
               private void buildUi() {
                   LinearLayout root = new LinearLayout(this);
                   root.setOrientation(LinearLayout.VERTICAL);
                   root.setBackgroundColor(Color.rgb(9,12,15));
-                  root.setPadding(dp(14), dp(12), dp(14), dp(10));
+                  root.setPadding(dp(12), dp(10), dp(12), dp(8));
 
-                  LinearLayout hero = new LinearLayout(this);
-                  hero.setOrientation(LinearLayout.VERTICAL);
-                  hero.setPadding(dp(16), dp(16), dp(16), dp(16));
-                  hero.setBackground(rounded(Color.rgb(14,22,32), Color.rgb(36,46,58), 24, 1));
+                  LinearLayout head = new LinearLayout(this);
+                  head.setOrientation(LinearLayout.HORIZONTAL);
+                  head.setGravity(Gravity.CENTER_VERTICAL);
 
-                  TextView brand = tv("TÜRKÇE · GELİŞİM · REKLAMSIZ", 11, Color.rgb(240,166,42), true);
-                  hero.addView(brand);
+                  LinearLayout brandBox = new LinearLayout(this);
+                  brandBox.setOrientation(LinearLayout.VERTICAL);
 
-                  TextView title = tv("15 Dakikada Gelişim", 24, Color.WHITE, true);
-                  LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(
-                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                  tlp.setMargins(0, dp(4), 0, dp(6));
-                  hero.addView(title, tlp);
+                  TextView brand = tv("15 DAKİKADA GELİŞİM", 19, Color.WHITE, true);
+                  brandBox.addView(brand);
+                  TextView sub = tv("Dinle · düşün · uygula", 11, Color.rgb(145,153,160), false);
+                  brandBox.addView(sub);
 
-                  TextView sub = tv(
-                      "Native Android oynatıcı · Türkçe ses · ekran kapalı dinleme",
-                      13, Color.rgb(170,177,182), false);
-                  hero.addView(sub);
-
-                  LinearLayout top = new LinearLayout(this);
-                  top.setOrientation(LinearLayout.HORIZONTAL);
-                  LinearLayout.LayoutParams topLp = new LinearLayout.LayoutParams(
-                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                  topLp.setMargins(0, dp(12), 0, 0);
-                  hero.addView(top, topLp);
-
-                  Button refresh = new Button(this);
-                  refresh.setText("↻ Kataloğu Güncelle");
-                  styleActionButton(refresh, Color.rgb(240,166,42), Color.rgb(20,20,20));
-                  refresh.setOnClickListener(v -> loadCatalog());
-                  top.addView(refresh, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-
-                  View spacer = new View(this);
-                  top.addView(spacer, new LinearLayout.LayoutParams(dp(8), 1));
+                  head.addView(
+                      brandBox,
+                      new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
                   Button adult = new Button(this);
-                  adult.setText("18+ Aç");
-                  styleActionButton(adult, Color.rgb(31,38,46), Color.WHITE);
+                  adult.setText("18+");
+                  styleButton(adult, Color.rgb(32,38,44), Color.WHITE);
                   adult.setOnClickListener(v -> {
                       if (!adultUnlocked) {
                           new AlertDialog.Builder(this)
                               .setTitle("18+ Yetişkinler")
                               .setMessage("Bu bölüm yetişkinlere yönelik ilişki ve yakınlık eğitimi içerir.")
-                              .setNegativeButton("Vazgeç",null)
-                              .setPositiveButton("18 yaş ve üzerindeyim",(d,w)->{
-                                  adultUnlocked=true;
-                                  adult.setText("18+ Kapat");
-                                  styleActionButton(adult, Color.rgb(92,44,66), Color.WHITE);
-                                  rebuildCats();
+                              .setNegativeButton("Vazgeç", null)
+                              .setPositiveButton("18 yaş ve üzerindeyim", (d,w) -> {
+                                  adultUnlocked = true;
+                                  adult.setText("18+ ✓");
+                                  styleButton(adult, Color.rgb(111,47,76), Color.WHITE);
+                                  rebuildCategories();
                                   filter();
                               }).show();
                       } else {
-                          adultUnlocked=false;
-                          adult.setText("18+ Aç");
-                          styleActionButton(adult, Color.rgb(31,38,46), Color.WHITE);
-                          rebuildCats();
+                          adultUnlocked = false;
+                          adult.setText("18+");
+                          styleButton(adult, Color.rgb(32,38,44), Color.WHITE);
+                          if ("18+ Yetişkin".equals(currentCategory))
+                              currentCategory = "Öne Çıkanlar";
+                          rebuildCategories();
                           filter();
                       }
                   });
-                  top.addView(adult, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
-                  root.addView(hero);
+                  head.addView(adult);
+                  root.addView(head);
 
                   search = new EditText(this);
                   search.setHint("Konu, kitap, yazar veya beceri ara…");
-                  search.setHintTextColor(Color.rgb(120,128,134));
+                  search.setHintTextColor(Color.rgb(112,121,128));
                   search.setTextColor(Color.WHITE);
                   search.setSingleLine(true);
-                  search.setBackground(rounded(Color.rgb(17,22,27), Color.rgb(35,43,50), 18, 1));
-                  search.setPadding(dp(14), dp(12), dp(14), dp(12));
-                  LinearLayout.LayoutParams searchLp = new LinearLayout.LayoutParams(
-                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                  search.setBackground(
+                      rounded(Color.rgb(18,23,27), Color.rgb(37,44,50), 20, 1));
+                  search.setPadding(dp(14), dp(11), dp(14), dp(11));
+
+                  LinearLayout.LayoutParams searchLp =
+                      new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          ViewGroup.LayoutParams.WRAP_CONTENT);
                   searchLp.setMargins(0, dp(12), 0, dp(8));
                   root.addView(search, searchLp);
 
-                  LinearLayout filterBox = new LinearLayout(this);
-                  filterBox.setOrientation(LinearLayout.VERTICAL);
-                  filterBox.setPadding(dp(12), dp(10), dp(12), dp(10));
-                  filterBox.setBackground(rounded(Color.rgb(14,18,23), Color.rgb(33,40,48), 18, 1));
+                  HorizontalScrollView hsv = new HorizontalScrollView(this);
+                  hsv.setHorizontalScrollBarEnabled(false);
+                  categoryBar = new LinearLayout(this);
+                  categoryBar.setOrientation(LinearLayout.HORIZONTAL);
+                  hsv.addView(categoryBar);
+                  root.addView(hsv);
 
-                  TextView catLabel = tv("Kategori", 12, Color.rgb(145,154,160), true);
-                  filterBox.addView(catLabel);
+                  LinearLayout info = new LinearLayout(this);
+                  info.setOrientation(LinearLayout.HORIZONTAL);
+                  info.setGravity(Gravity.CENTER_VERTICAL);
 
-                  spinner = new Spinner(this);
-                  filterBox.addView(spinner);
-                  root.addView(filterBox);
+                  count = tv("Katalog yükleniyor…", 13, Color.rgb(185,191,196), true);
+                  info.addView(
+                      count,
+                      new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
-                  count = tv("Katalog yükleniyor…", 13, Color.rgb(182,188,193), false);
-                  LinearLayout.LayoutParams countLp = new LinearLayout.LayoutParams(
-                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                  countLp.setMargins(0, dp(10), 0, dp(6));
-                  root.addView(count, countLp);
+                  Button refresh = new Button(this);
+                  refresh.setText("↻");
+                  styleButton(refresh, Color.rgb(31,37,43), Color.WHITE);
+                  refresh.setOnClickListener(v -> loadCatalog());
+                  info.addView(refresh);
+
+                  LinearLayout.LayoutParams infoLp =
+                      new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          ViewGroup.LayoutParams.WRAP_CONTENT);
+                  infoLp.setMargins(0, dp(8), 0, dp(7));
+                  root.addView(info, infoLp);
 
                   progress = new ProgressBar(this);
                   root.addView(progress);
 
-                  list = new ListView(this);
-                  list.setDivider(null);
-                  list.setDividerHeight(dp(10));
-                  list.setVerticalScrollBarEnabled(false);
-                  list.setBackgroundColor(Color.TRANSPARENT);
+                  grid = new GridView(this);
+                  grid.setNumColumns(2);
+                  grid.setColumnWidth(dp(150));
+                  grid.setHorizontalSpacing(dp(10));
+                  grid.setVerticalSpacing(dp(10));
+                  grid.setStretchMode(GridView.STRETCH_COLUMN_WIDTH);
+                  grid.setVerticalScrollBarEnabled(false);
+                  grid.setSelector(android.R.color.transparent);
+                  grid.setBackgroundColor(Color.TRANSPARENT);
+
                   adapter = new BooksAdapter();
-                  list.setAdapter(adapter);
-                  root.addView(list, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+                  grid.setAdapter(adapter);
+
+                  root.addView(
+                      grid,
+                      new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
                   LinearLayout player = new LinearLayout(this);
                   player.setOrientation(LinearLayout.HORIZONTAL);
-                  player.setPadding(dp(8), dp(8), dp(8), dp(8));
-                  player.setBackground(rounded(Color.rgb(14,18,23), Color.rgb(33,40,48), 20, 1));
+                  player.setPadding(dp(7), dp(7), dp(7), dp(7));
+                  player.setBackground(
+                      rounded(Color.rgb(17,22,27), Color.rgb(38,45,51), 20, 1));
 
                   Button pause = new Button(this);
-                  pause.setText("⏯ Duraklat / Devam");
-                  styleActionButton(pause, Color.rgb(31,38,46), Color.WHITE);
-                  pause.setOnClickListener(v -> sendAction(TtsPlaybackService.ACTION_TOGGLE));
+                  pause.setText("⏯  Duraklat / Devam");
+                  styleButton(pause, Color.rgb(40,47,54), Color.WHITE);
+                  pause.setOnClickListener(v ->
+                      sendAction(TtsPlaybackService.ACTION_TOGGLE));
 
                   Button stop = new Button(this);
-                  stop.setText("■ Durdur");
-                  styleActionButton(stop, Color.rgb(92,44,44), Color.WHITE);
-                  stop.setOnClickListener(v -> sendAction(TtsPlaybackService.ACTION_STOP));
+                  stop.setText("■");
+                  styleButton(stop, Color.rgb(82,43,49), Color.WHITE);
+                  stop.setOnClickListener(v ->
+                      sendAction(TtsPlaybackService.ACTION_STOP));
 
-                  player.addView(pause, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 2f));
-                  View gap = new View(this);
-                  player.addView(gap, new LinearLayout.LayoutParams(dp(8), 1));
-                  player.addView(stop, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-                  LinearLayout.LayoutParams playerLp = new LinearLayout.LayoutParams(
-                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                  playerLp.setMargins(0, dp(8), 0, 0);
+                  player.addView(
+                      pause,
+                      new LinearLayout.LayoutParams(
+                          0, ViewGroup.LayoutParams.WRAP_CONTENT, 3f));
+
+                  View pgap = new View(this);
+                  player.addView(pgap, new LinearLayout.LayoutParams(dp(7), 1));
+
+                  player.addView(
+                      stop,
+                      new LinearLayout.LayoutParams(
+                          0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+                  LinearLayout.LayoutParams playerLp =
+                      new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          ViewGroup.LayoutParams.WRAP_CONTENT);
+                  playerLp.setMargins(0, dp(7), 0, 0);
                   root.addView(player, playerLp);
 
                   setContentView(root);
 
                   search.addTextChangedListener(new TextWatcher() {
                       public void beforeTextChanged(CharSequence s,int st,int c,int a){}
-                      public void onTextChanged(CharSequence s,int st,int b,int c){ filter(); }
+                      public void onTextChanged(CharSequence s,int st,int b,int c){
+                          filter();
+                      }
                       public void afterTextChanged(Editable e){}
                   });
+              }
 
-                  spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                      public void onItemSelected(AdapterView<?> p,View v,int pos,long id){ filter(); }
-                      public void onNothingSelected(AdapterView<?> p){}
-                  });
+              private void rebuildCategories() {
+                  Set<String> set = new LinkedHashSet<>();
+                  set.add("Öne Çıkanlar");
+
+                  for (Book b : all) {
+                      if (b.adult && !adultUnlocked) continue;
+                      if (!b.category.isEmpty()) set.add(b.category);
+                  }
+
+                  categoryBar.removeAllViews();
+
+                  for (String cat : set) {
+                      Button chip = new Button(this);
+                      chip.setText(cat);
+                      chip.setAllCaps(false);
+                      chip.setTextSize(13);
+                      chip.setTypeface(null, Typeface.BOLD);
+
+                      boolean active = cat.equals(currentCategory);
+                      int bg = active ? Color.rgb(240,166,42) : Color.rgb(25,31,36);
+                      int fg = active ? Color.rgb(20,20,20) : Color.rgb(198,203,207);
+
+                      chip.setTextColor(fg);
+                      chip.setBackground(
+                          rounded(bg, Color.rgb(43,50,56), 999, active ? 0 : 1));
+                      chip.setPadding(dp(13), dp(7), dp(13), dp(7));
+
+                      LinearLayout.LayoutParams lp =
+                          new LinearLayout.LayoutParams(
+                              ViewGroup.LayoutParams.WRAP_CONTENT,
+                              ViewGroup.LayoutParams.WRAP_CONTENT);
+                      lp.setMargins(0, 0, dp(7), 0);
+
+                      chip.setOnClickListener(v -> {
+                          if ("18+ Yetişkin".equals(cat) && !adultUnlocked)
+                              return;
+                          currentCategory = cat;
+                          rebuildCategories();
+                          filter();
+                      });
+
+                      categoryBar.addView(chip, lp);
+                  }
               }
 
               private void loadCatalog() {
@@ -364,26 +429,35 @@ jobs:
 
                   new Thread(() -> {
                       try {
-                          HttpURLConnection c=(HttpURLConnection)new URL(
-                              CATALOG_URL+"?v="+System.currentTimeMillis()).openConnection();
+                          HttpURLConnection c =
+                              (HttpURLConnection)new URL(
+                                  CATALOG_URL + "?v=" + System.currentTimeMillis())
+                                  .openConnection();
+
                           c.setConnectTimeout(15000);
                           c.setReadTimeout(25000);
                           c.setRequestProperty("Cache-Control","no-cache");
 
-                          BufferedReader br=new BufferedReader(new InputStreamReader(c.getInputStream(),"UTF-8"));
-                          StringBuilder sb=new StringBuilder();
+                          BufferedReader br =
+                              new BufferedReader(
+                                  new InputStreamReader(
+                                      c.getInputStream(),"UTF-8"));
+
+                          StringBuilder sb = new StringBuilder();
                           String line;
-                          while((line=br.readLine())!=null) sb.append(line);
+                          while ((line=br.readLine())!=null) sb.append(line);
+
                           br.close();
                           c.disconnect();
 
-                          JSONObject root=new JSONObject(sb.toString());
-                          JSONArray arr=root.getJSONArray("items");
-                          ArrayList<Book> temp=new ArrayList<>();
+                          JSONObject root = new JSONObject(sb.toString());
+                          JSONArray arr = root.getJSONArray("items");
+                          ArrayList<Book> temp = new ArrayList<>();
 
-                          for(int i=0;i<arr.length();i++) {
-                              JSONObject o=arr.getJSONObject(i);
-                              Book x=new Book();
+                          for (int i=0;i<arr.length();i++) {
+                              JSONObject o = arr.getJSONObject(i);
+                              Book x = new Book();
+
                               x.id=o.optString("id");
                               x.title=o.optString("title");
                               x.author=o.optString("author");
@@ -396,10 +470,14 @@ jobs:
                               x.religion=o.optBoolean("religion",false);
 
                               JSONArray ps=o.optJSONArray("principles");
-                              if(ps!=null) for(int j=0;j<ps.length();j++) x.principles.add(ps.optString(j));
+                              if(ps!=null)
+                                  for(int j=0;j<ps.length();j++)
+                                      x.principles.add(ps.optString(j));
 
                               JSONArray ac=o.optJSONArray("actions");
-                              if(ac!=null) for(int j=0;j<ac.length();j++) x.actions.add(ac.optString(j));
+                              if(ac!=null)
+                                  for(int j=0;j<ac.length();j++)
+                                      x.actions.add(ac.optString(j));
 
                               temp.add(x);
                           }
@@ -407,7 +485,7 @@ jobs:
                           runOnUiThread(() -> {
                               all.clear();
                               all.addAll(temp);
-                              rebuildCats();
+                              rebuildCategories();
                               progress.setVisibility(View.GONE);
                               filter();
                           });
@@ -416,102 +494,123 @@ jobs:
                           runOnUiThread(() -> {
                               progress.setVisibility(View.GONE);
                               count.setText("Katalog yüklenemedi.");
-                              Toast.makeText(this,"Katalog hatası: "+e.getClass().getSimpleName(),Toast.LENGTH_LONG).show();
+                              Toast.makeText(
+                                  this,
+                                  "Katalog hatası: "+e.getClass().getSimpleName(),
+                                  Toast.LENGTH_LONG).show();
                           });
                       }
                   }).start();
               }
 
-              private void rebuildCats() {
-                  String old=spinner.getSelectedItem()==null?"Öne Çıkanlar":spinner.getSelectedItem().toString();
-                  Set<String> set=new LinkedHashSet<>();
-                  set.add("Öne Çıkanlar");
-
-                  for(Book b:all) {
-                      if(b.adult&&!adultUnlocked) continue;
-                      if(!b.category.isEmpty()) set.add(b.category);
-                  }
-
-                  cats.clear();
-                  cats.addAll(set);
-                  spinner.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,cats));
-
-                  int i=cats.indexOf(old);
-                  spinner.setSelection(i<0?0:i);
-              }
-
               private void filter() {
-                  if(adapter==null) return;
+                  if (adapter == null) return;
 
-                  String q=search.getText().toString().trim().toLowerCase(new Locale("tr","TR"));
-                  String cat=spinner.getSelectedItem()==null?"Öne Çıkanlar":spinner.getSelectedItem().toString();
+                  String q = search.getText().toString()
+                      .trim().toLowerCase(new Locale("tr","TR"));
 
                   shown.clear();
 
-                  for(Book b:all) {
-                      if(b.adult&&!adultUnlocked) continue;
-                      if(!"Öne Çıkanlar".equals(cat)&&!cat.equals(b.category)) continue;
+                  for (Book b : all) {
+                      if (b.adult && !adultUnlocked) continue;
 
-                      String hay=(b.title+" "+b.author+" "+b.category+" "+b.focus)
-                          .toLowerCase(new Locale("tr","TR"));
+                      boolean categoryOk =
+                          "Öne Çıkanlar".equals(currentCategory) ||
+                          currentCategory.equals(b.category);
 
-                      if(!q.isEmpty()&&!hay.contains(q)) continue;
+                      if (!categoryOk) continue;
+
+                      String hay =
+                          (b.title+" "+b.author+" "+b.category+" "+b.focus)
+                              .toLowerCase(new Locale("tr","TR"));
+
+                      if (!q.isEmpty() && !hay.contains(q)) continue;
+
                       shown.add(b);
                   }
 
-                  count.setText(shown.size()+" içerik · toplam "+all.size()+" Türkçe dinleme");
+                  count.setText(shown.size()+" içerik");
                   adapter.notifyDataSetChanged();
               }
 
               private String lesson(Book x) {
-                  if(x.summary!=null&&!x.summary.trim().isEmpty()) return x.summary;
+                  if (x.summary!=null && !x.summary.trim().isEmpty())
+                      return x.summary;
 
-                  StringBuilder s=new StringBuilder();
-                  s.append("Bu dinlemenin amacı ").append(x.title)
+                  StringBuilder s = new StringBuilder();
+
+                  s.append("Bu dinlemenin amacı ")
+                   .append(x.title)
                    .append(" konusunda sana yalnız bilgi vermek değil; ")
                    .append(x.focus==null?"bu alanı":x.focus)
-                   .append(" günlük davranışa çevirmene yardım etmektir.\n\n");
+                   .append(" günlük davranışa çevirmene yardım etmektir.
 
-                  for(int i=0;i<x.principles.size();i++) {
+");
+
+                  for (int i=0;i<x.principles.size();i++) {
                       s.append(i+1).append(". temel ders: ")
                        .append(x.principles.get(i))
                        .append(" Bu fikri son bir haftadan gerçek bir örnekle ilişkilendir. ")
-                       .append("Soyut bilgiyi somut davranışa çevirmek değişimi kolaylaştırır.\n\n");
+                       .append("Soyut bilgiyi somut davranışa çevirmek değişimi kolaylaştırır.
+
+");
                   }
 
-                  s.append("Şimdi teoriden uygulamaya geçelim. Aynı anda her şeyi değiştirmeye çalışma.\n\n");
+                  s.append("Şimdi teoriden uygulamaya geçelim. ")
+                   .append("Aynı anda her şeyi değiştirmeye çalışma.
 
-                  for(int i=0;i<x.actions.size();i++) {
-                      s.append("Uygulama ").append(i+1).append(": ")
+");
+
+                  for (int i=0;i<x.actions.size();i++) {
+                      s.append("Uygulama ")
+                       .append(i+1)
+                       .append(": ")
                        .append(x.actions.get(i))
-                       .append(" Bunu küçük ve bugün uygulanabilir hale getir.\n\n");
+                       .append(" Bunu küçük ve bugün uygulanabilir hale getir.
+
+");
                   }
 
-                  s.append("Dinleme sonrası muhasebe: Bugün hangi fikri benimsedim? ")
+                  s.append("Dinleme sonrası muhasebe: ")
+                   .append("Bugün hangi fikri benimsedim? ")
                    .append("Hangi davranışım bununla çelişiyor? ")
                    .append("Önümüzdeki yedi gün hangi küçük davranışı tekrarlayacağım?");
+
                   return s.toString();
               }
 
               private void play(Book b) {
-                  Intent i=new Intent(this,TtsPlaybackService.class);
+                  Intent i = new Intent(this,TtsPlaybackService.class);
                   i.setAction(TtsPlaybackService.ACTION_PLAY_TEXT);
                   i.putExtra(TtsPlaybackService.EXTRA_TITLE,b.title);
                   i.putExtra(TtsPlaybackService.EXTRA_TEXT,lesson(b));
                   i.putExtra(TtsPlaybackService.EXTRA_RATE,0.9f);
 
                   try {
-                      if(Build.VERSION.SDK_INT>=26) startForegroundService(i); else startService(i);
-                      Toast.makeText(this,"▶ "+b.title,Toast.LENGTH_SHORT).show();
+                      if(Build.VERSION.SDK_INT>=26)
+                          startForegroundService(i);
+                      else
+                          startService(i);
+
+                      Toast.makeText(
+                          this,
+                          "▶ "+b.title,
+                          Toast.LENGTH_SHORT).show();
+
                   } catch(Exception e) {
-                      Toast.makeText(this,"Ses başlatılamadı: "+e.getClass().getSimpleName(),Toast.LENGTH_LONG).show();
+                      Toast.makeText(
+                          this,
+                          "Ses başlatılamadı: "+e.getClass().getSimpleName(),
+                          Toast.LENGTH_LONG).show();
                   }
               }
 
               private void read(Book b) {
-                  TextView body=tv(lesson(b),16,Color.rgb(35,35,35),false);
+                  TextView body = tv(
+                      lesson(b),16,Color.rgb(35,35,35),false);
                   body.setPadding(dp(16),dp(10),dp(16),dp(10));
-                  ScrollView sc=new ScrollView(this);
+
+                  ScrollView sc = new ScrollView(this);
                   sc.addView(body);
 
                   new AlertDialog.Builder(this)
@@ -525,7 +624,7 @@ jobs:
 
               private void sendAction(String action) {
                   try {
-                      Intent i=new Intent(this,TtsPlaybackService.class);
+                      Intent i = new Intent(this,TtsPlaybackService.class);
                       i.setAction(action);
                       startService(i);
                   } catch(Exception ignored) {}
@@ -536,80 +635,157 @@ jobs:
                   public Object getItem(int p){ return shown.get(p); }
                   public long getItemId(int p){ return p; }
 
-                  public View getView(int p,View old,ViewGroup parent) {
-                      Book b=shown.get(p);
+                  public View getView(int p, View old, ViewGroup parent) {
+                      Book b = shown.get(p);
 
-                      LinearLayout row=new LinearLayout(MainActivity.this);
-                      row.setOrientation(LinearLayout.VERTICAL);
-                      row.setPadding(dp(14),dp(14),dp(14),dp(12));
+                      LinearLayout card = new LinearLayout(MainActivity.this);
+                      card.setOrientation(LinearLayout.VERTICAL);
+                      card.setPadding(dp(9),dp(9),dp(9),dp(9));
 
-                      int bg = b.religion ? Color.rgb(22,39,30) : b.adult ? Color.rgb(47,26,37) : Color.rgb(14,18,23);
-                      int stroke = b.religion ? Color.rgb(52,83,61) : b.adult ? Color.rgb(90,55,72) : Color.rgb(33,40,48);
-                      row.setBackground(rounded(bg, stroke, 22, 1));
+                      int border =
+                          b.religion ? Color.rgb(51,79,59) :
+                          b.adult ? Color.rgb(86,48,66) :
+                          Color.rgb(35,43,49);
 
-                      TextView chip=tv(b.category.isEmpty()?"GELİŞİM":b.category.toUpperCase(new Locale("tr","TR")),11,Color.WHITE,true);
-                      chip.setBackground(rounded(Color.rgb(36,52,68), Color.TRANSPARENT, 999, 0));
-                      chip.setPadding(dp(10),dp(5),dp(10),dp(5));
-                      LinearLayout.LayoutParams chipLp=new LinearLayout.LayoutParams(
-                          ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT);
-                      row.addView(chip, chipLp);
+                      card.setBackground(
+                          rounded(Color.rgb(16,21,24), border, 20, 1));
 
-                      TextView t=tv(b.title,21,Color.WHITE,true);
-                      LinearLayout.LayoutParams tLp=new LinearLayout.LayoutParams(
-                          ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
-                      tLp.setMargins(0,dp(12),0,dp(6));
-                      row.addView(t,tLp);
+                      LinearLayout cover = new LinearLayout(MainActivity.this);
+                      cover.setOrientation(LinearLayout.VERTICAL);
+                      cover.setGravity(Gravity.BOTTOM);
+                      cover.setPadding(dp(12),dp(12),dp(12),dp(14));
 
-                      TextView meta=tv(b.author+" · "+b.duration,13,Color.rgb(175,181,185),false);
-                      row.addView(meta);
+                      int coverBg =
+                          b.religion ? Color.rgb(45,85,57) :
+                          b.adult ? Color.rgb(106,48,75) :
+                          Color.rgb(39,80,105);
 
-                      if(b.focus!=null && !b.focus.isEmpty()) {
-                          TextView focus=tv(b.focus,13,Color.rgb(240,166,42),false);
-                          LinearLayout.LayoutParams fLp=new LinearLayout.LayoutParams(
-                              ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
-                          fLp.setMargins(0,dp(8),0,0);
-                          row.addView(focus,fLp);
-                      }
+                      cover.setBackground(
+                          rounded(coverBg, Color.TRANSPARENT, 17, 0));
 
-                      LinearLayout buttons=new LinearLayout(MainActivity.this);
-                      buttons.setOrientation(LinearLayout.HORIZONTAL);
-                      LinearLayout.LayoutParams blp=new LinearLayout.LayoutParams(
-                          ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
-                      blp.setMargins(0,dp(14),0,0);
+                      TextView chip = tv(
+                          b.religion ? "DİN & HAYAT" :
+                          b.adult ? "18+" : "GELİŞİM",
+                          10, Color.WHITE, true);
 
-                      Button listen=new Button(MainActivity.this);
-                      listen.setText("▶ DİNLE");
-                      styleActionButton(listen, Color.rgb(240,166,42), Color.rgb(18,18,18));
+                      chip.setBackground(
+                          rounded(Color.argb(125,0,0,0), Color.TRANSPARENT, 999, 0));
+                      chip.setPadding(dp(8),dp(4),dp(8),dp(4));
+
+                      LinearLayout.LayoutParams chipLp =
+                          new LinearLayout.LayoutParams(
+                              ViewGroup.LayoutParams.WRAP_CONTENT,
+                              ViewGroup.LayoutParams.WRAP_CONTENT);
+
+                      cover.addView(chip,chipLp);
+
+                      View flexible = new View(MainActivity.this);
+                      cover.addView(
+                          flexible,
+                          new LinearLayout.LayoutParams(
+                              1,0,1f));
+
+                      TextView coverTitle =
+                          tv(b.title,19,Color.WHITE,true);
+                      coverTitle.setMaxLines(3);
+                      cover.addView(coverTitle);
+
+                      LinearLayout.LayoutParams coverLp =
+                          new LinearLayout.LayoutParams(
+                              ViewGroup.LayoutParams.MATCH_PARENT,
+                              dp(190));
+
+                      card.addView(cover,coverLp);
+
+                      TextView title =
+                          tv(b.title,17,Color.WHITE,true);
+                      title.setMaxLines(2);
+
+                      LinearLayout.LayoutParams titleLp =
+                          new LinearLayout.LayoutParams(
+                              ViewGroup.LayoutParams.MATCH_PARENT,
+                              ViewGroup.LayoutParams.WRAP_CONTENT);
+                      titleLp.setMargins(dp(3),dp(9),dp(3),0);
+                      card.addView(title,titleLp);
+
+                      TextView author =
+                          tv(b.author,13,Color.rgb(154,162,168),false);
+                      author.setMaxLines(1);
+                      LinearLayout.LayoutParams authorLp =
+                          new LinearLayout.LayoutParams(
+                              ViewGroup.LayoutParams.MATCH_PARENT,
+                              ViewGroup.LayoutParams.WRAP_CONTENT);
+                      authorLp.setMargins(dp(3),dp(3),dp(3),0);
+                      card.addView(author,authorLp);
+
+                      TextView meta =
+                          tv(b.category+" · "+b.duration,11,
+                              Color.rgb(134,143,149),false);
+                      meta.setMaxLines(1);
+                      LinearLayout.LayoutParams metaLp =
+                          new LinearLayout.LayoutParams(
+                              ViewGroup.LayoutParams.MATCH_PARENT,
+                              ViewGroup.LayoutParams.WRAP_CONTENT);
+                      metaLp.setMargins(dp(3),dp(3),dp(3),dp(8));
+                      card.addView(meta,metaLp);
+
+                      LinearLayout actions =
+                          new LinearLayout(MainActivity.this);
+                      actions.setOrientation(LinearLayout.HORIZONTAL);
+
+                      Button listen =
+                          new Button(MainActivity.this);
+                      listen.setText("▶ Dinle");
+                      styleButton(
+                          listen,
+                          Color.rgb(240,166,42),
+                          Color.rgb(18,18,18));
+
                       listen.setOnClickListener(v -> play(b));
 
-                      Button read=new Button(MainActivity.this);
-                      read.setText("OKU");
-                      styleActionButton(read, Color.rgb(31,38,46), Color.WHITE);
+                      Button read =
+                          new Button(MainActivity.this);
+                      read.setText("Oku");
+                      styleButton(
+                          read,
+                          Color.rgb(35,42,48),
+                          Color.WHITE);
+
                       read.setOnClickListener(v -> read(b));
 
-                      buttons.addView(listen,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,2f));
-                      View g2=new View(MainActivity.this);
-                      buttons.addView(g2,new LinearLayout.LayoutParams(dp(8),1));
-                      buttons.addView(read,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1f));
-                      row.addView(buttons,blp);
+                      actions.addView(
+                          listen,
+                          new LinearLayout.LayoutParams(
+                              0,ViewGroup.LayoutParams.WRAP_CONTENT,2f));
 
-                      LinearLayout wrapper = new LinearLayout(MainActivity.this);
-                      wrapper.setPadding(0,0,0,dp(10));
-                      wrapper.addView(row,new LinearLayout.LayoutParams(
-                          ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                      row.setOnClickListener(v -> read(b));
-                      return wrapper;
+                      View agap = new View(MainActivity.this);
+                      actions.addView(
+                          agap,
+                          new LinearLayout.LayoutParams(dp(6),1));
+
+                      actions.addView(
+                          read,
+                          new LinearLayout.LayoutParams(
+                              0,ViewGroup.LayoutParams.WRAP_CONTENT,1f));
+
+                      card.addView(actions);
+
+                      card.setOnClickListener(v -> read(b));
+
+                      return card;
                   }
               }
 
               private static class Book {
-                  String id="",title="",author="",category="",focus="",duration="",source="",summary="";
+                  String id="",title="",author="",category="",focus="",
+                      duration="",source="",summary="";
                   boolean adult=false,religion=false;
                   final ArrayList<String> principles=new ArrayList<>();
                   final ArrayList<String> actions=new ArrayList<>();
               }
           }
           EOF
+
 
 
           cat > app/src/main/java/com/guncelgelisim/app/TtsPlaybackService.java <<'EOF'
@@ -1216,10 +1392,10 @@ jobs:
         run: gradle :app:assembleDebug --stacktrace
 
       - name: APK adını düzenle
-        run: cp app/build/outputs/apk/debug/app-debug.apk 15-Dakikada-Gelisim-v10.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk 15-Dakikada-Gelisim-v11.apk
 
       - name: APK yükle
         uses: actions/upload-artifact@v4
         with:
-          name: 15-Dakikada-Gelisim-v10-APK
-          path: 15-Dakikada-Gelisim-v10.apk
+          name: 15-Dakikada-Gelisim-v11-APK
+          path: 15-Dakikada-Gelisim-v11.apk
