@@ -1,4 +1,4 @@
-name: APK Oluştur - Karttan Direkt Ses v8
+name: APK Oluştur - Tam Native v9
 
 on:
   workflow_dispatch:
@@ -6,7 +6,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Java 17 kur
         uses: actions/setup-java@v5
@@ -34,20 +33,13 @@ jobs:
 
           cat > settings.gradle <<'EOF'
           pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
+              repositories { google(); mavenCentral(); gradlePluginPortal() }
           }
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories {
-                  google()
-                  mavenCentral()
-              }
+              repositories { google(); mavenCentral() }
           }
-          rootProject.name = 'OnBesDakikadaGelisim'
+          rootProject.name='OnBesDakikadaGelisim'
           include ':app'
           EOF
 
@@ -58,22 +50,17 @@ jobs:
           EOF
 
           cat > app/build.gradle <<'EOF'
-          plugins {
-              id 'com.android.application'
-          }
-
+          plugins { id 'com.android.application' }
           android {
               namespace 'com.guncelgelisim.app'
               compileSdk 35
-
               defaultConfig {
                   applicationId 'com.guncelgelisim.app'
                   minSdk 26
                   targetSdk 35
-                  versionCode 7
-                  versionName '1.6.0'
+                  versionCode 8
+                  versionName '2.0.0'
               }
-
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_17
                   targetCompatibility JavaVersion.VERSION_17
@@ -81,22 +68,13 @@ jobs:
           }
           EOF
 
-
           cat > app/src/main/res/drawable/app_icon.xml <<'EOF'
           <vector xmlns:android="http://schemas.android.com/apk/res/android"
-              android:width="108dp"
-              android:height="108dp"
-              android:viewportWidth="108"
-              android:viewportHeight="108">
-              <path
-                  android:fillColor="#101416"
-                  android:pathData="M0,0h108v108h-108z"/>
-              <path
-                  android:fillColor="#F0A62A"
-                  android:pathData="M54,15a39,39 0,1 0,0 78a39,39 0,1 0,0 -78"/>
-              <path
-                  android:fillColor="#101416"
-                  android:pathData="M45,35L45,73L77,54Z"/>
+              android:width="108dp" android:height="108dp"
+              android:viewportWidth="108" android:viewportHeight="108">
+              <path android:fillColor="#101416" android:pathData="M0,0h108v108h-108z"/>
+              <path android:fillColor="#F0A62A" android:pathData="M54,15a39,39 0,1 0,0 78a39,39 0,1 0,0 -78"/>
+              <path android:fillColor="#101416" android:pathData="M45,35L45,73L77,54Z"/>
           </vector>
           EOF
 
@@ -107,7 +85,6 @@ jobs:
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-
               <application
                   android:allowBackup="true"
                   android:usesCleartextTraffic="false"
@@ -115,16 +92,12 @@ jobs:
                   android:roundIcon="@drawable/app_icon"
                   android:label="15 Dakikada Gelişim"
                   android:theme="@android:style/Theme.Material.NoActionBar">
-
-                  <activity
-                      android:name=".MainActivity"
-                      android:exported="true">
+                  <activity android:name=".MainActivity" android:exported="true">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN"/>
                           <category android:name="android.intent.category.LAUNCHER"/>
                       </intent-filter>
                   </activity>
-
                   <service
                       android:name=".TtsPlaybackService"
                       android:exported="false"
@@ -138,448 +111,404 @@ jobs:
 
           import android.Manifest;
           import android.app.Activity;
-          import android.content.Context;
+          import android.app.AlertDialog;
           import android.content.Intent;
           import android.content.pm.PackageManager;
+          import android.graphics.Color;
           import android.os.Build;
           import android.os.Bundle;
-          import android.graphics.Color;
-          import android.view.Gravity;
+          import android.text.Editable;
+          import android.text.TextWatcher;
+          import android.view.View;
           import android.view.ViewGroup;
+          import android.widget.AdapterView;
+          import android.widget.ArrayAdapter;
+          import android.widget.BaseAdapter;
           import android.widget.Button;
+          import android.widget.EditText;
           import android.widget.LinearLayout;
-          import android.widget.FrameLayout;
+          import android.widget.ListView;
+          import android.widget.ProgressBar;
+          import android.widget.Spinner;
+          import android.widget.TextView;
           import android.widget.Toast;
-          import android.webkit.JavascriptInterface;
-          import android.webkit.WebChromeClient;
-          import android.webkit.WebSettings;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
+
           import org.json.JSONArray;
           import org.json.JSONObject;
 
+          import java.io.BufferedReader;
+          import java.io.InputStreamReader;
+          import java.net.HttpURLConnection;
+          import java.net.URL;
+          import java.util.ArrayList;
+          import java.util.LinkedHashSet;
+          import java.util.Locale;
+          import java.util.Set;
+
           public class MainActivity extends Activity {
-              private static final String APP_URL =
-                      "https://gncbzkrt.github.io/aile-sesli-kitap/";
-              private WebView webView;
+
+              private static final String CATALOG_URL =
+                  "https://gncbzkrt.github.io/aile-sesli-kitap/catalog.json";
+
+              private final ArrayList<Book> all = new ArrayList<>();
+              private final ArrayList<Book> shown = new ArrayList<>();
+              private final ArrayList<String> cats = new ArrayList<>();
+
+              private ListView list;
+              private Spinner spinner;
+              private EditText search;
+              private TextView count;
+              private ProgressBar progress;
+              private BooksAdapter adapter;
+              private boolean adultUnlocked = false;
 
               @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
+              protected void onCreate(Bundle b) {
+                  super.onCreate(b);
 
                   if (Build.VERSION.SDK_INT >= 33 &&
-                          checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
-                                  != PackageManager.PERMISSION_GRANTED) {
+                      checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                          != PackageManager.PERMISSION_GRANTED) {
                       requestPermissions(
-                              new String[]{Manifest.permission.POST_NOTIFICATIONS}, 10);
+                          new String[]{Manifest.permission.POST_NOTIFICATIONS}, 10);
                   }
 
-                  FrameLayout root = new FrameLayout(this);
+                  buildUi();
+                  loadCatalog();
+              }
 
-                  webView = new WebView(this);
-                  root.addView(
-                      webView,
-                      new FrameLayout.LayoutParams(
-                          ViewGroup.LayoutParams.MATCH_PARENT,
-                          ViewGroup.LayoutParams.MATCH_PARENT));
+              private int dp(int v) {
+                  return (int)(v * getResources().getDisplayMetrics().density + .5f);
+              }
 
-                  LinearLayout controls = new LinearLayout(this);
-                  controls.setOrientation(LinearLayout.HORIZONTAL);
-                  controls.setGravity(Gravity.CENTER);
-                  controls.setPadding(8, 8, 8, 8);
-                  controls.setBackgroundColor(Color.rgb(24, 28, 31));
+              private TextView tv(String s, int size, int color) {
+                  TextView t = new TextView(this);
+                  t.setText(s);
+                  t.setTextSize(size);
+                  t.setTextColor(color);
+                  return t;
+              }
 
-                  Button testButton = new Button(this);
-                  testButton.setText("🔊 Test");
+              private void buildUi() {
+                  LinearLayout root = new LinearLayout(this);
+                  root.setOrientation(LinearLayout.VERTICAL);
+                  root.setBackgroundColor(Color.rgb(12,15,17));
+                  root.setPadding(dp(14),dp(12),dp(14),dp(10));
 
-                  Button playButton = new Button(this);
-                  playButton.setText("▶ Açık Özeti Dinle");
+                  TextView title = tv("15 DAKİKADA GELİŞİM",21,Color.WHITE);
+                  title.setTypeface(null,android.graphics.Typeface.BOLD);
+                  root.addView(title);
 
-                  Button pauseButton = new Button(this);
-                  pauseButton.setText("⏯");
+                  TextView sub = tv("Native Android · Türkçe · Ekran kapalı dinleme",12,Color.rgb(150,158,164));
+                  root.addView(sub);
 
-                  Button stopButton = new Button(this);
-                  stopButton.setText("■");
+                  LinearLayout top = new LinearLayout(this);
+                  top.setOrientation(LinearLayout.HORIZONTAL);
 
-                  LinearLayout.LayoutParams small =
-                      new LinearLayout.LayoutParams(
-                          0,
-                          ViewGroup.LayoutParams.WRAP_CONTENT,
-                          1f);
+                  Button refresh = new Button(this);
+                  refresh.setText("↻ Katalog");
+                  refresh.setOnClickListener(v -> loadCatalog());
+                  top.addView(refresh,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1f));
 
-                  LinearLayout.LayoutParams large =
-                      new LinearLayout.LayoutParams(
-                          0,
-                          ViewGroup.LayoutParams.WRAP_CONTENT,
-                          2f);
+                  Button adult = new Button(this);
+                  adult.setText("18+ Aç");
+                  adult.setOnClickListener(v -> {
+                      if (!adultUnlocked) {
+                          new AlertDialog.Builder(this)
+                              .setTitle("18+ Yetişkinler")
+                              .setMessage("Bu bölüm yetişkinlere yönelik ilişki ve yakınlık eğitimi içerir.")
+                              .setNegativeButton("Vazgeç",null)
+                              .setPositiveButton("18 yaş ve üzerindeyim",(d,w)->{
+                                  adultUnlocked=true;
+                                  adult.setText("18+ Kapat");
+                                  rebuildCats();
+                                  filter();
+                              }).show();
+                      } else {
+                          adultUnlocked=false;
+                          adult.setText("18+ Aç");
+                          rebuildCats();
+                          filter();
+                      }
+                  });
+                  top.addView(adult,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1f));
+                  root.addView(top);
 
-                  controls.addView(testButton, small);
-                  controls.addView(playButton, large);
-                  controls.addView(pauseButton, small);
-                  controls.addView(stopButton, small);
+                  search = new EditText(this);
+                  search.setHint("Konu, kitap, yazar veya beceri ara…");
+                  search.setHintTextColor(Color.rgb(120,128,134));
+                  search.setTextColor(Color.WHITE);
+                  search.setSingleLine(true);
+                  search.setBackgroundColor(Color.rgb(23,28,31));
+                  search.setPadding(dp(12),dp(10),dp(12),dp(10));
+                  root.addView(search,new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT));
 
-                  FrameLayout.LayoutParams cp =
-                      new FrameLayout.LayoutParams(
-                          ViewGroup.LayoutParams.MATCH_PARENT,
-                          ViewGroup.LayoutParams.WRAP_CONTENT);
+                  spinner = new Spinner(this);
+                  root.addView(spinner);
 
-                  cp.gravity = Gravity.BOTTOM;
-                  root.addView(controls, cp);
+                  count = tv("Katalog yükleniyor…",13,Color.rgb(170,177,182));
+                  root.addView(count);
 
-                  webView.setPadding(0, 0, 0, 88);
-                  webView.setClipToPadding(false);
+                  progress = new ProgressBar(this);
+                  root.addView(progress);
+
+                  list = new ListView(this);
+                  list.setDividerHeight(dp(8));
+                  list.setBackgroundColor(Color.TRANSPARENT);
+                  adapter = new BooksAdapter();
+                  list.setAdapter(adapter);
+                  root.addView(list,new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,0,1f));
+
+                  LinearLayout player = new LinearLayout(this);
+                  player.setOrientation(LinearLayout.HORIZONTAL);
+
+                  Button pause = new Button(this);
+                  pause.setText("⏯ Duraklat / Devam");
+                  pause.setOnClickListener(v -> sendAction(TtsPlaybackService.ACTION_TOGGLE));
+
+                  Button stop = new Button(this);
+                  stop.setText("■ Durdur");
+                  stop.setOnClickListener(v -> sendAction(TtsPlaybackService.ACTION_STOP));
+
+                  player.addView(pause,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,2f));
+                  player.addView(stop,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1f));
+                  root.addView(player);
 
                   setContentView(root);
 
-                  testButton.setOnClickListener(v ->
-                      startNativeText(
-                          "Ses Testi",
-                          "Türkçe ses sistemi çalışıyor. "
-                              + "Ekranı kapattığında da bu sesin devam etmesi gerekir.",
-                          0.9f));
-
-                  playButton.setOnClickListener(v ->
-                      playSelectedFromPage());
-
-                  pauseButton.setOnClickListener(v ->
-                      sendSimpleAction(
-                          TtsPlaybackService.ACTION_TOGGLE));
-
-                  stopButton.setOnClickListener(v ->
-                      sendSimpleAction(
-                          TtsPlaybackService.ACTION_STOP));
-
-                  WebSettings s = webView.getSettings();
-                  s.setJavaScriptEnabled(true);
-                  s.setDomStorageEnabled(true);
-                  s.setDatabaseEnabled(true);
-                  s.setMediaPlaybackRequiresUserGesture(false);
-
-                  webView.setWebChromeClient(new WebChromeClient());
-                  webView.addJavascriptInterface(
-                          new AndroidTtsBridge(this), "AndroidTTS");
-
-                  webView.setWebViewClient(new WebViewClient() {
-                      @Override
-                      public void onPageFinished(WebView view, String url) {
-                          super.onPageFinished(view, url);
-                          installNativeHint();
-                      }
+                  search.addTextChangedListener(new TextWatcher() {
+                      public void beforeTextChanged(CharSequence s,int st,int c,int a){}
+                      public void onTextChanged(CharSequence s,int st,int b,int c){ filter(); }
+                      public void afterTextChanged(Editable e){}
                   });
 
-                  webView.loadUrl(APP_URL);
+                  spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                      public void onItemSelected(AdapterView<?> p,View v,int pos,long id){ filter(); }
+                      public void onNothingSelected(AdapterView<?> p){}
+                  });
               }
 
-              private void installNativeHint() {
-                  String js =
-                      "javascript:(function(){" +
-                      "if(window.__ANDROID_DIRECT_V8__)return;" +
-                      "window.__ANDROID_DIRECT_V8__=true;" +
+              private void loadCatalog() {
+                  progress.setVisibility(View.VISIBLE);
+                  count.setText("Katalog yükleniyor…");
 
-                      "function findItem(id){" +
-                      "try{" +
-                      "if(typeof ITEMS!=='undefined'&&Array.isArray(ITEMS)){" +
-                      "return ITEMS.find(function(x){return x.id===id;})||null;" +
-                      "}" +
-                      "}catch(e){}" +
-                      "return null;" +
-                      "}" +
+                  new Thread(() -> {
+                      try {
+                          HttpURLConnection c=(HttpURLConnection)new URL(
+                              CATALOG_URL+"?v="+System.currentTimeMillis()).openConnection();
+                          c.setConnectTimeout(15000);
+                          c.setReadTimeout(25000);
+                          c.setRequestProperty("Cache-Control","no-cache");
 
-                      "function lesson(x){" +
-                      "try{" +
-                      "if(typeof composeLesson==='function')return composeLesson(x);" +
-                      "}catch(e){}" +
-                      "if(x&&x.summary)return x.summary;" +
-                      "var out=[];" +
-                      "out.push('Bu dinlemenin amacı '+x.title+' konusunda kişisel gelişimine katkı sağlayacak fikirleri günlük hayata çevirmektir.');" +
-                      "(x.principles||[]).forEach(function(v,i){" +
-                      "out.push((i+1)+'. temel ders: '+v+' Bu fikri son bir haftadan gerçek bir örnekle ilişkilendir. Soyut bilgiyi somut davranışa çevirmek değişimi kolaylaştırır.');" +
-                      "});" +
-                      "(x.actions||[]).forEach(function(v,i){" +
-                      "out.push('Uygulama '+(i+1)+': '+v+' Bunu küçük, ölçülebilir ve bugün uygulanabilir hale getir.');" +
-                      "});" +
-                      "out.push('Dinleme sonrası muhasebe: Hangi fikri benimsedim? Hangi davranışım bununla çelişiyor? Önümüzdeki yedi gün hangi küçük davranışı tekrarlayacağım?');" +
-                      "return out.join('\n\n');" +
-                      "}" +
+                          BufferedReader br=new BufferedReader(new InputStreamReader(c.getInputStream(),"UTF-8"));
+                          StringBuilder sb=new StringBuilder();
+                          String line;
+                          while((line=br.readLine())!=null) sb.append(line);
+                          br.close();
+                          c.disconnect();
 
-                      "function playId(id){" +
-                      "var x=findItem(id);" +
-                      "if(!x){setTimeout(function(){playId(id);},150);return;}" +
-                      "var r=document.querySelector('#rate');" +
-                      "var rate=Number(r&&r.value?r.value:0.9)||0.9;" +
-                      "var text=lesson(x);" +
-                      "if(window.speechSynthesis)window.speechSynthesis.cancel();" +
-                      "AndroidTTS.playDirect(String(x.title||'15 Dakikada Gelişim'),String(text||''),rate);" +
-                      "}" +
+                          JSONObject root=new JSONObject(sb.toString());
+                          JSONArray arr=root.getJSONArray("items");
+                          ArrayList<Book> temp=new ArrayList<>();
 
-                      "document.addEventListener('click',function(e){" +
-                      "var el=e.target&&e.target.closest?e.target.closest('[data-open]'):null;" +
-                      "if(!el)return;" +
-                      "var id=el.getAttribute('data-open');" +
-                      "if(!id)return;" +
+                          for(int i=0;i<arr.length();i++) {
+                              JSONObject o=arr.getJSONObject(i);
+                              Book x=new Book();
+                              x.id=o.optString("id");
+                              x.title=o.optString("title");
+                              x.author=o.optString("author");
+                              x.category=o.optString("category");
+                              x.focus=o.optString("focus");
+                              x.duration=o.optString("duration","≈12–15 dk");
+                              x.source=o.optString("source","");
+                              x.summary=o.optString("summary","");
+                              x.adult=o.optBoolean("adult",false);
+                              x.religion=o.optBoolean("religion",false);
 
-                      "if(el.classList&&el.classList.contains('listen')){" +
-                      "e.preventDefault();" +
-                      "e.stopPropagation();" +
-                      "e.stopImmediatePropagation();" +
-                      "playId(id);" +
-                      "return;" +
-                      "}" +
+                              JSONArray ps=o.optJSONArray("principles");
+                              if(ps!=null) for(int j=0;j<ps.length();j++) x.principles.add(ps.optString(j));
 
-                      "if(el.classList&&el.classList.contains('cover')){" +
-                      "try{if(typeof openItem==='function')openItem(id);}catch(err){}" +
-                      "}" +
-                      "},true);" +
+                              JSONArray ac=o.optJSONArray("actions");
+                              if(ac!=null) for(int j=0;j<ac.length();j++) x.actions.add(ac.optString(j));
 
-                      "})();";
-
-                  webView.evaluateJavascript(js, null);
-              }
-
-              private void playSelectedFromPage() {
-                  String js =
-                      "(function(){" +
-                      "var s=document.querySelector('#summary');" +
-                      "var h=document.querySelector('#playerTitle');" +
-                      "var r=document.querySelector('#rate');" +
-                      "return JSON.stringify({" +
-                      "title:String(h&&h.innerText?h.innerText:'')," +
-                      "text:String(s&&s.innerText?s.innerText:'').trim()," +
-                      "rate:Number(r&&r.value?r.value:0.9)||0.9" +
-                      "});" +
-                      "})()";
-
-                  webView.evaluateJavascript(
-                      js,
-                      value -> {
-                          try {
-                              if (value == null ||
-                                  "null".equals(value)) {
-                                  Toast.makeText(
-                                      this,
-                                      "Önce bir içerik aç.",
-                                      Toast.LENGTH_LONG)
-                                      .show();
-                                  return;
-                              }
-
-                              String decoded =
-                                  new JSONArray(
-                                      "[" + value + "]")
-                                      .getString(0);
-
-                              JSONObject o =
-                                  new JSONObject(decoded);
-
-                              String title =
-                                  o.optString(
-                                      "title",
-                                      "15 Dakikada Gelişim");
-
-                              String text =
-                                  o.optString("text", "");
-
-                              float rate =
-                                  (float) o.optDouble(
-                                      "rate",
-                                      0.9);
-
-                              if (text.trim().isEmpty()) {
-                                  webView.evaluateJavascript(
-                                      "(function(){"
-                                          + "var p=document.querySelector('#player');"
-                                          + "if(p&&p.scrollIntoView)p.scrollIntoView({behavior:'smooth'});"
-                                          + "return !!document.querySelector('#summary');"
-                                          + "})()",
-                                      ignored -> Toast.makeText(
-                                          this,
-                                          "Kart üzerindeki sarı DİNLE düğmesine bas. "
-                                              + "Bu sürümde doğrudan Android sesi başlatır.",
-                                          Toast.LENGTH_LONG)
-                                          .show());
-                                  return;
-                              }
-
-                              startNativeText(
-                                  title,
-                                  text,
-                                  rate);
-
-                          } catch (Exception ex) {
-                              Toast.makeText(
-                                  this,
-                                  "Metin alınamadı: "
-                                      + ex.getClass().getSimpleName(),
-                                  Toast.LENGTH_LONG)
-                                  .show();
+                              temp.add(x);
                           }
-                      });
-              }
 
-              private void startNativeText(
-                      String title,
-                      String text,
-                      float rate) {
-
-                  Intent i =
-                      new Intent(
-                          this,
-                          TtsPlaybackService.class);
-
-                  i.setAction(
-                      TtsPlaybackService.ACTION_PLAY_TEXT);
-
-                  i.putExtra(
-                      TtsPlaybackService.EXTRA_TITLE,
-                      title);
-
-                  i.putExtra(
-                      TtsPlaybackService.EXTRA_TEXT,
-                      text);
-
-                  i.putExtra(
-                      TtsPlaybackService.EXTRA_RATE,
-                      rate);
-
-                  try {
-                      if (Build.VERSION.SDK_INT >= 26)
-                          startForegroundService(i);
-                      else
-                          startService(i);
-                  } catch (Exception ex) {
-                      Toast.makeText(
-                          this,
-                          "Ses başlatılamadı: "
-                              + ex.getClass().getSimpleName(),
-                          Toast.LENGTH_LONG)
-                          .show();
-                  }
-              }
-
-              private void sendSimpleAction(
-                      String action) {
-
-                  Intent i =
-                      new Intent(
-                          this,
-                          TtsPlaybackService.class);
-
-                  i.setAction(action);
-
-                  try {
-                      startService(i);
-                  } catch (Exception ex) {
-                      Toast.makeText(
-                          this,
-                          "Ses kontrolü çalışmadı.",
-                          Toast.LENGTH_SHORT)
-                          .show();
-                  }
-              }
-
-              public static class AndroidTtsBridge {
-                  private final Context context;
-
-                  AndroidTtsBridge(Context c) {
-                      context = c.getApplicationContext();
-                  }
-
-                  private void send(
-                          String action,
-                          String title,
-                          String text,
-                          float rate,
-                          int delta) {
-
-                      new android.os.Handler(
-                              android.os.Looper.getMainLooper())
-                          .post(() -> {
-                              Intent i = new Intent(
-                                  context,
-                                  TtsPlaybackService.class);
-                              i.setAction(action);
-
-                              if (title != null)
-                                  i.putExtra(
-                                      TtsPlaybackService.EXTRA_TITLE,
-                                      title);
-                              if (text != null)
-                                  i.putExtra(
-                                      TtsPlaybackService.EXTRA_TEXT,
-                                      text);
-
-                              i.putExtra(
-                                  TtsPlaybackService.EXTRA_RATE,
-                                  rate);
-                              i.putExtra(
-                                  TtsPlaybackService.EXTRA_DELTA,
-                                  delta);
-
-                              try {
-                                  if (TtsPlaybackService.ACTION_PLAY_TEXT.equals(action)
-                                          && Build.VERSION.SDK_INT >= 26) {
-                                      context.startForegroundService(i);
-                                  } else {
-                                      context.startService(i);
-                                  }
-                              } catch (Exception ex) {
-                                  android.widget.Toast.makeText(
-                                      context,
-                                      "Ses servisi başlatılamadı: "
-                                          + ex.getClass().getSimpleName(),
-                                      android.widget.Toast.LENGTH_LONG)
-                                      .show();
-                              }
+                          runOnUiThread(() -> {
+                              all.clear();
+                              all.addAll(temp);
+                              rebuildCats();
+                              progress.setVisibility(View.GONE);
+                              filter();
                           });
-                  }
 
-                  @JavascriptInterface
-                  public void playDirect(String title, String text, double rate) {
-                      if (text == null || text.trim().isEmpty()) {
-                          new android.os.Handler(android.os.Looper.getMainLooper())
-                              .post(() -> android.widget.Toast.makeText(
-                                  context,
-                                  "İçerik metni hazırlanamadı.",
-                                  android.widget.Toast.LENGTH_LONG).show());
-                          return;
+                      } catch(Exception e) {
+                          runOnUiThread(() -> {
+                              progress.setVisibility(View.GONE);
+                              count.setText("Katalog yüklenemedi.");
+                              Toast.makeText(this,"Katalog hatası: "+e.getClass().getSimpleName(),Toast.LENGTH_LONG).show();
+                          });
                       }
-                      send(
-                          TtsPlaybackService.ACTION_PLAY_TEXT,
-                          title,
-                          text,
-                          (float) rate,
-                          0);
+                  }).start();
+              }
+
+              private void rebuildCats() {
+                  String old=spinner.getSelectedItem()==null?"Öne Çıkanlar":spinner.getSelectedItem().toString();
+                  Set<String> set=new LinkedHashSet<>();
+                  set.add("Öne Çıkanlar");
+
+                  for(Book b:all) {
+                      if(b.adult&&!adultUnlocked) continue;
+                      if(!b.category.isEmpty()) set.add(b.category);
                   }
 
-                  @JavascriptInterface
-                  public void toggle(String title, String text, double rate) {
-                      send(
-                          TtsPlaybackService.ACTION_PLAY_TEXT,
-                          title,
-                          text,
-                          (float) rate,
-                          0);
+                  cats.clear();
+                  cats.addAll(set);
+                  spinner.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,cats));
+
+                  int i=cats.indexOf(old);
+                  spinner.setSelection(i<0?0:i);
+              }
+
+              private void filter() {
+                  if(adapter==null) return;
+
+                  String q=search.getText().toString().trim().toLowerCase(new Locale("tr","TR"));
+                  String cat=spinner.getSelectedItem()==null?"Öne Çıkanlar":spinner.getSelectedItem().toString();
+
+                  shown.clear();
+
+                  for(Book b:all) {
+                      if(b.adult&&!adultUnlocked) continue;
+                      if(!"Öne Çıkanlar".equals(cat)&&!cat.equals(b.category)) continue;
+
+                      String hay=(b.title+" "+b.author+" "+b.category+" "+b.focus)
+                          .toLowerCase(new Locale("tr","TR"));
+
+                      if(!q.isEmpty()&&!hay.contains(q)) continue;
+                      shown.add(b);
                   }
 
-                  @JavascriptInterface
-                  public void stop() {
-                      send(
-                          TtsPlaybackService.ACTION_STOP,
-                          null,
-                          null,
-                          1f,
-                          0);
+                  count.setText(shown.size()+" içerik · toplam "+all.size());
+                  adapter.notifyDataSetChanged();
+              }
+
+              private String lesson(Book x) {
+                  if(x.summary!=null&&!x.summary.trim().isEmpty()) return x.summary;
+
+                  StringBuilder s=new StringBuilder();
+                  s.append("Bu dinlemenin amacı ").append(x.title)
+                   .append(" konusunda sana yalnız bilgi vermek değil; ")
+                   .append(x.focus==null?"bu alanı":x.focus)
+                   .append(" günlük davranışa çevirmene yardım etmektir.\n\n");
+
+                  for(int i=0;i<x.principles.size();i++) {
+                      s.append(i+1).append(". temel ders: ")
+                       .append(x.principles.get(i))
+                       .append(" Bu fikri son bir haftadan gerçek bir örnekle ilişkilendir. ")
+                       .append("Soyut bilgiyi somut davranışa çevirmek değişimi kolaylaştırır.\n\n");
                   }
 
-                  @JavascriptInterface
-                  public void skip(int delta) {
-                      send(
-                          TtsPlaybackService.ACTION_SKIP,
-                          null,
-                          null,
-                          1f,
-                          delta);
+                  s.append("Şimdi teoriden uygulamaya geçelim. Aynı anda her şeyi değiştirmeye çalışma.\n\n");
+
+                  for(int i=0;i<x.actions.size();i++) {
+                      s.append("Uygulama ").append(i+1).append(": ")
+                       .append(x.actions.get(i))
+                       .append(" Bunu küçük ve bugün uygulanabilir hale getir.\n\n");
                   }
+
+                  s.append("Dinleme sonrası muhasebe: Bugün hangi fikri benimsedim? ")
+                   .append("Hangi davranışım bununla çelişiyor? ")
+                   .append("Önümüzdeki yedi gün hangi küçük davranışı tekrarlayacağım?");
+                  return s.toString();
+              }
+
+              private void play(Book b) {
+                  Intent i=new Intent(this,TtsPlaybackService.class);
+                  i.setAction(TtsPlaybackService.ACTION_PLAY_TEXT);
+                  i.putExtra(TtsPlaybackService.EXTRA_TITLE,b.title);
+                  i.putExtra(TtsPlaybackService.EXTRA_TEXT,lesson(b));
+                  i.putExtra(TtsPlaybackService.EXTRA_RATE,0.9f);
+
+                  try {
+                      if(Build.VERSION.SDK_INT>=26) startForegroundService(i); else startService(i);
+                      Toast.makeText(this,"▶ "+b.title,Toast.LENGTH_SHORT).show();
+                  } catch(Exception e) {
+                      Toast.makeText(this,"Ses başlatılamadı: "+e.getClass().getSimpleName(),Toast.LENGTH_LONG).show();
+                  }
+              }
+
+              private void read(Book b) {
+                  TextView body=tv(lesson(b),16,Color.rgb(35,35,35));
+                  body.setPadding(dp(16),dp(10),dp(16),dp(10));
+                  android.widget.ScrollView sc=new android.widget.ScrollView(this);
+                  sc.addView(body);
+
+                  new AlertDialog.Builder(this)
+                      .setTitle(b.title)
+                      .setMessage(b.author+" · "+b.category)
+                      .setView(sc)
+                      .setNegativeButton("Kapat",null)
+                      .setPositiveButton("▶ Dinle",(d,w)->play(b))
+                      .show();
+              }
+
+              private void sendAction(String action) {
+                  try {
+                      Intent i=new Intent(this,TtsPlaybackService.class);
+                      i.setAction(action);
+                      startService(i);
+                  } catch(Exception ignored) {}
+              }
+
+              private class BooksAdapter extends BaseAdapter {
+                  public int getCount(){ return shown.size(); }
+                  public Object getItem(int p){ return shown.get(p); }
+                  public long getItemId(int p){ return p; }
+
+                  public View getView(int p,View old,ViewGroup parent) {
+                      Book b=shown.get(p);
+
+                      LinearLayout row=new LinearLayout(MainActivity.this);
+                      row.setOrientation(LinearLayout.VERTICAL);
+                      row.setPadding(dp(12),dp(10),dp(12),dp(10));
+                      row.setBackgroundColor(
+                          b.religion?Color.rgb(25,46,31):
+                          b.adult?Color.rgb(55,28,42):
+                          Color.rgb(20,25,28));
+
+                      TextView t=tv(b.title,19,Color.WHITE);
+                      t.setTypeface(null,android.graphics.Typeface.BOLD);
+                      row.addView(t);
+
+                      TextView meta=tv(b.author+" · "+b.category+" · "+b.duration,13,Color.rgb(175,181,185));
+                      row.addView(meta);
+
+                      LinearLayout buttons=new LinearLayout(MainActivity.this);
+                      buttons.setOrientation(LinearLayout.HORIZONTAL);
+
+                      Button listen=new Button(MainActivity.this);
+                      listen.setText("▶ DİNLE");
+                      listen.setOnClickListener(v -> play(b));
+
+                      Button read=new Button(MainActivity.this);
+                      read.setText("OKU");
+                      read.setOnClickListener(v -> read(b));
+
+                      buttons.addView(listen,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,2f));
+                      buttons.addView(read,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1f));
+                      row.addView(buttons);
+
+                      row.setOnClickListener(v -> read(b));
+                      return row;
+                  }
+              }
+
+              private static class Book {
+                  String id="",title="",author="",category="",focus="",duration="",source="",summary="";
+                  boolean adult=false,religion=false;
+                  final ArrayList<String> principles=new ArrayList<>();
+                  final ArrayList<String> actions=new ArrayList<>();
               }
           }
           EOF
@@ -1188,10 +1117,10 @@ jobs:
         run: gradle :app:assembleDebug --stacktrace
 
       - name: APK adını düzenle
-        run: cp app/build/outputs/apk/debug/app-debug.apk 15-Dakikada-Gelisim.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk 15-Dakikada-Gelisim-v9.apk
 
       - name: APK yükle
         uses: actions/upload-artifact@v4
         with:
-          name: 15-Dakikada-Gelisim-APK
-          path: 15-Dakikada-Gelisim.apk
+          name: 15-Dakikada-Gelisim-v9-APK
+          path: 15-Dakikada-Gelisim-v9.apk
