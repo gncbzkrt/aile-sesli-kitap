@@ -1,4 +1,4 @@
-name: APK Oluştur - KitUP Kartlar v11
+name: APK Oluştur - KitUP Kartlar v11.1
 
 on:
   workflow_dispatch:
@@ -58,8 +58,8 @@ jobs:
                   applicationId 'com.guncelgelisim.app'
                   minSdk 26
                   targetSdk 35
-                  versionCode 10
-                  versionName '2.2.0'
+                  versionCode 11
+                  versionName '2.2.1'
               }
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_17
@@ -543,32 +543,24 @@ jobs:
                    .append(x.title)
                    .append(" konusunda sana yalnız bilgi vermek değil; ")
                    .append(x.focus==null?"bu alanı":x.focus)
-                   .append(" günlük davranışa çevirmene yardım etmektir.
-
-");
+                   .append(" günlük davranışa çevirmene yardım etmektir.\n\n");
 
                   for (int i=0;i<x.principles.size();i++) {
                       s.append(i+1).append(". temel ders: ")
                        .append(x.principles.get(i))
                        .append(" Bu fikri son bir haftadan gerçek bir örnekle ilişkilendir. ")
-                       .append("Soyut bilgiyi somut davranışa çevirmek değişimi kolaylaştırır.
-
-");
+                       .append("Soyut bilgiyi somut davranışa çevirmek değişimi kolaylaştırır.\n\n");
                   }
 
                   s.append("Şimdi teoriden uygulamaya geçelim. ")
-                   .append("Aynı anda her şeyi değiştirmeye çalışma.
-
-");
+                   .append("Aynı anda her şeyi değiştirmeye çalışma.\n\n");
 
                   for (int i=0;i<x.actions.size();i++) {
                       s.append("Uygulama ")
                        .append(i+1)
                        .append(": ")
                        .append(x.actions.get(i))
-                       .append(" Bunu küçük ve bugün uygulanabilir hale getir.
-
-");
+                       .append(" Bunu küçük ve bugün uygulanabilir hale getir.\n\n");
                   }
 
                   s.append("Dinleme sonrası muhasebe: ")
@@ -1392,10 +1384,10 @@ jobs:
         run: gradle :app:assembleDebug --stacktrace
 
       - name: APK adını düzenle
-        run: cp app/build/outputs/apk/debug/app-debug.apk 15-Dakikada-Gelisim-v11.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk 15-Dakikada-Gelisim-v11-1.apk
 
       - name: APK yükle
         uses: actions/upload-artifact@v4
         with:
-          name: 15-Dakikada-Gelisim-v11-APK
-          path: 15-Dakikada-Gelisim-v11.apk
+          name: 15-Dakikada-Gelisim-v11-1-APK
+          path: 15-Dakikada-Gelisim-v11-1.apk
