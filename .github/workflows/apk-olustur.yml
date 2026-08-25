@@ -1,4 +1,4 @@
-name: APK Oluştur - KitUP Kartlar + Katalog v11.2
+name: APK Oluştur - Ses Ayarları v11.3
 
 on:
   workflow_dispatch:
@@ -58,7 +58,7 @@ jobs:
                   applicationId 'com.guncelgelisim.app'
                   minSdk 26
                   targetSdk 35
-                  versionCode 11
+                  versionCode 12
                   versionName '2.2.1'
               }
               compileOptions {
@@ -136,8 +136,12 @@ jobs:
           import android.widget.LinearLayout;
           import android.widget.ProgressBar;
           import android.widget.ScrollView;
+          import android.widget.SeekBar;
+          import android.widget.Spinner;
           import android.widget.TextView;
           import android.widget.Toast;
+          import android.speech.tts.TextToSpeech;
+          import android.speech.tts.Voice;
 
           import org.json.JSONArray;
           import org.json.JSONObject;
@@ -160,6 +164,10 @@ jobs:
               private static final int PICK_CATALOG = 2001;
               private static final String PREFS = "gelisim_catalog";
               private static final String PREF_CUSTOM_JSON = "custom_catalog_json";
+              private static final String PREF_AUDIO = "gelisim_audio";
+              private static final String PREF_RATE = "speech_rate";
+              private static final String PREF_PITCH = "speech_pitch";
+              private static final String PREF_VOICE = "speech_voice";
 
               private final ArrayList<Book> all = new ArrayList<>();
               private final ArrayList<Book> shown = new ArrayList<>();
@@ -174,6 +182,10 @@ jobs:
               private String currentCategory = "Öne Çıkanlar";
               private boolean adultUnlocked = false;
 
+              private TextToSpeech voicePreviewTts;
+              private boolean voicePreviewReady = false;
+              private final ArrayList<Voice> turkishVoices = new ArrayList<>();
+
               @Override
               protected void onCreate(Bundle b) {
                   super.onCreate(b);
@@ -186,6 +198,7 @@ jobs:
                   }
 
                   buildUi();
+                  initVoicePreview();
 
                   String saved = getSharedPreferences(PREFS, MODE_PRIVATE)
                       .getString(PREF_CUSTOM_JSON, "");
@@ -346,6 +359,21 @@ jobs:
                       ViewGroup.LayoutParams.WRAP_CONTENT);
                   caLp.setMargins(0, dp(7), 0, 0);
                   catalogBox.addView(catalogActions, caLp);
+
+                  Button audioSettings = new Button(this);
+                  audioSettings.setText("🔊 Ses Ayarı · Hız · Perde · Ses");
+                  styleButton(
+                      audioSettings,
+                      Color.rgb(38,49,58),
+                      Color.WHITE);
+                  audioSettings.setOnClickListener(v -> showVoiceSettings());
+
+                  LinearLayout.LayoutParams audioLp =
+                      new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          ViewGroup.LayoutParams.WRAP_CONTENT);
+                  audioLp.setMargins(0, dp(7), 0, 0);
+                  catalogBox.addView(audioSettings, audioLp);
 
                   LinearLayout.LayoutParams cbLp = new LinearLayout.LayoutParams(
                       ViewGroup.LayoutParams.MATCH_PARENT,
@@ -734,6 +762,324 @@ jobs:
                   dialog.show();
               }
 
+              private void initVoicePreview() {
+                  voicePreviewTts = new TextToSpeech(
+                      this,
+                      status -> {
+                          if (status != TextToSpeech.SUCCESS) return;
+
+                          voicePreviewReady = true;
+                          voicePreviewTts.setLanguage(new Locale("tr", "TR"));
+                          refreshTurkishVoices();
+                      });
+              }
+
+              private void refreshTurkishVoices() {
+                  turkishVoices.clear();
+
+                  if (!voicePreviewReady ||
+                      voicePreviewTts == null ||
+                      voicePreviewTts.getVoices() == null) return;
+
+                  for (Voice v : voicePreviewTts.getVoices()) {
+                      if (v == null || v.getLocale() == null) continue;
+
+                      String lang = v.getLocale().getLanguage();
+                      if ("tr".equalsIgnoreCase(lang))
+                          turkishVoices.add(v);
+                  }
+
+                  java.util.Collections.sort(
+                      turkishVoices,
+                      (a,b) -> {
+                          int q = Integer.compare(
+                              b.getQuality(),
+                              a.getQuality());
+                          if (q != 0) return q;
+
+                          if (a.isNetworkConnectionRequired() !=
+                              b.isNetworkConnectionRequired()) {
+                              return a.isNetworkConnectionRequired() ? -1 : 1;
+                          }
+
+                          return a.getName().compareToIgnoreCase(b.getName());
+                      });
+              }
+
+              private float savedRate() {
+                  return getSharedPreferences(PREF_AUDIO, MODE_PRIVATE)
+                      .getFloat(PREF_RATE, 0.90f);
+              }
+
+              private float savedPitch() {
+                  return getSharedPreferences(PREF_AUDIO, MODE_PRIVATE)
+                      .getFloat(PREF_PITCH, 1.00f);
+              }
+
+              private String savedVoice() {
+                  return getSharedPreferences(PREF_AUDIO, MODE_PRIVATE)
+                      .getString(PREF_VOICE, "");
+              }
+
+              private String voiceLabel(Voice v) {
+                  if (v == null) return "Sistem varsayılan Türkçe ses";
+
+                  String mode =
+                      v.isNetworkConnectionRequired()
+                          ? "çevrimiçi"
+                          : "cihaz";
+
+                  String quality;
+                  if (v.getQuality() >= Voice.QUALITY_VERY_HIGH)
+                      quality = "çok yüksek";
+                  else if (v.getQuality() >= Voice.QUALITY_HIGH)
+                      quality = "yüksek";
+                  else
+                      quality = "standart";
+
+                  return v.getName() +
+                      " · " + quality +
+                      " · " + mode;
+              }
+
+              private void applyPreviewVoice(
+                      Voice v,
+                      float rate,
+                      float pitch) {
+
+                  if (!voicePreviewReady ||
+                      voicePreviewTts == null) {
+                      Toast.makeText(
+                          this,
+                          "Türkçe ses motoru henüz hazırlanıyor.",
+                          Toast.LENGTH_SHORT).show();
+                      return;
+                  }
+
+                  voicePreviewTts.stop();
+                  voicePreviewTts.setLanguage(
+                      new Locale("tr", "TR"));
+
+                  if (v != null)
+                      voicePreviewTts.setVoice(v);
+
+                  voicePreviewTts.setSpeechRate(rate);
+                  voicePreviewTts.setPitch(pitch);
+
+                  voicePreviewTts.speak(
+                      "Bu ses ayarının doğal konuşma örneğidir. " +
+                          "Hız ve perdeyi değiştirerek sana en rahat gelen sesi seçebilirsin.",
+                      TextToSpeech.QUEUE_FLUSH,
+                      null,
+                      "voice-preview");
+              }
+
+              private void showVoiceSettings() {
+                  if (voicePreviewReady)
+                      refreshTurkishVoices();
+
+                  LinearLayout box = new LinearLayout(this);
+                  box.setOrientation(LinearLayout.VERTICAL);
+                  box.setPadding(dp(18), dp(8), dp(18), 0);
+
+                  float currentRate = savedRate();
+                  float currentPitch = savedPitch();
+                  String currentVoice = savedVoice();
+
+                  TextView rateTitle = tv(
+                      "Ses hızı: " +
+                          String.format(
+                              Locale.US,
+                              "%.2fx",
+                              currentRate),
+                      14,
+                      Color.rgb(50,50,50),
+                      true);
+                  box.addView(rateTitle);
+
+                  SeekBar rateBar = new SeekBar(this);
+                  rateBar.setMax(80);
+                  rateBar.setProgress(
+                      Math.round(
+                          (currentRate - 0.60f) * 100f));
+                  box.addView(rateBar);
+
+                  TextView pitchTitle = tv(
+                      "Ses perdesi: " +
+                          String.format(
+                              Locale.US,
+                              "%.2f",
+                              currentPitch),
+                      14,
+                      Color.rgb(50,50,50),
+                      true);
+                  box.addView(pitchTitle);
+
+                  SeekBar pitchBar = new SeekBar(this);
+                  pitchBar.setMax(80);
+                  pitchBar.setProgress(
+                      Math.round(
+                          (currentPitch - 0.60f) * 100f));
+                  box.addView(pitchBar);
+
+                  TextView voiceTitle = tv(
+                      "Türkçe ses",
+                      14,
+                      Color.rgb(50,50,50),
+                      true);
+                  box.addView(voiceTitle);
+
+                  Spinner voiceSpinner = new Spinner(this);
+                  ArrayList<String> labels = new ArrayList<>();
+                  labels.add("Sistem varsayılan Türkçe ses");
+
+                  for (Voice v : turkishVoices)
+                      labels.add(voiceLabel(v));
+
+                  ArrayAdapter<String> voiceAdapter =
+                      new ArrayAdapter<>(
+                          this,
+                          android.R.layout.simple_spinner_dropdown_item,
+                          labels);
+
+                  voiceSpinner.setAdapter(voiceAdapter);
+                  box.addView(voiceSpinner);
+
+                  int selected = 0;
+                  if (currentVoice != null &&
+                      !currentVoice.isEmpty()) {
+                      for (int i=0;i<turkishVoices.size();i++) {
+                          if (currentVoice.equals(
+                              turkishVoices.get(i).getName())) {
+                              selected = i + 1;
+                              break;
+                          }
+                      }
+                  }
+                  voiceSpinner.setSelection(selected);
+
+                  final float[] rateValue = { currentRate };
+                  final float[] pitchValue = { currentPitch };
+
+                  rateBar.setOnSeekBarChangeListener(
+                      new SeekBar.OnSeekBarChangeListener() {
+                          public void onProgressChanged(
+                              SeekBar s,
+                              int p,
+                              boolean fromUser) {
+
+                              rateValue[0] =
+                                  0.60f + p / 100f;
+
+                              rateTitle.setText(
+                                  "Ses hızı: " +
+                                      String.format(
+                                          Locale.US,
+                                          "%.2fx",
+                                          rateValue[0]));
+                          }
+
+                          public void onStartTrackingTouch(SeekBar s) {}
+                          public void onStopTrackingTouch(SeekBar s) {}
+                      });
+
+                  pitchBar.setOnSeekBarChangeListener(
+                      new SeekBar.OnSeekBarChangeListener() {
+                          public void onProgressChanged(
+                              SeekBar s,
+                              int p,
+                              boolean fromUser) {
+
+                              pitchValue[0] =
+                                  0.60f + p / 100f;
+
+                              pitchTitle.setText(
+                                  "Ses perdesi: " +
+                                      String.format(
+                                          Locale.US,
+                                          "%.2f",
+                                          pitchValue[0]));
+                          }
+
+                          public void onStartTrackingTouch(SeekBar s) {}
+                          public void onStopTrackingTouch(SeekBar s) {}
+                      });
+
+                  Button test = new Button(this);
+                  test.setText("▶ Sesi Dene");
+                  box.addView(test);
+
+                  AlertDialog dialog =
+                      new AlertDialog.Builder(this)
+                          .setTitle("Ses Ayarları")
+                          .setMessage(
+                              "Daha insansı ses için telefonda bulunan " +
+                              "Türkçe sesleri tek tek deneyebilirsin. " +
+                              "Çevrimiçi sesler bazı cihazlarda daha doğal olabilir.")
+                          .setView(box)
+                          .setNegativeButton("Vazgeç", null)
+                          .setPositiveButton("Kaydet", null)
+                          .create();
+
+                  dialog.setOnShowListener(x -> {
+                      test.setOnClickListener(v -> {
+                          Voice selectedVoice = null;
+                          int pos = voiceSpinner.getSelectedItemPosition();
+
+                          if (pos > 0 &&
+                              pos - 1 < turkishVoices.size())
+                              selectedVoice =
+                                  turkishVoices.get(pos - 1);
+
+                          applyPreviewVoice(
+                              selectedVoice,
+                              rateValue[0],
+                              pitchValue[0]);
+                      });
+
+                      dialog.getButton(
+                          AlertDialog.BUTTON_POSITIVE)
+                          .setOnClickListener(v -> {
+                              String name = "";
+                              int pos =
+                                  voiceSpinner.getSelectedItemPosition();
+
+                              if (pos > 0 &&
+                                  pos - 1 < turkishVoices.size())
+                                  name =
+                                      turkishVoices.get(
+                                          pos - 1).getName();
+
+                              getSharedPreferences(
+                                  PREF_AUDIO,
+                                  MODE_PRIVATE)
+                                  .edit()
+                                  .putFloat(
+                                      PREF_RATE,
+                                      rateValue[0])
+                                  .putFloat(
+                                      PREF_PITCH,
+                                      pitchValue[0])
+                                  .putString(
+                                      PREF_VOICE,
+                                      name)
+                                  .apply();
+
+                              if (voicePreviewTts != null)
+                                  voicePreviewTts.stop();
+
+                              Toast.makeText(
+                                  this,
+                                  "Ses ayarları kaydedildi.",
+                                  Toast.LENGTH_SHORT).show();
+
+                              dialog.dismiss();
+                          });
+                  });
+
+                  dialog.show();
+              }
+
               private void filter() {
                   if (adapter == null) return;
 
@@ -765,26 +1111,44 @@ jobs:
               }
 
               private String lesson(Book x) {
-                  if (x.summary!=null && !x.summary.trim().isEmpty())
-                      return x.summary;
+                  if (x.summary != null &&
+                      !x.summary.trim().isEmpty()) {
 
-                  StringBuilder s = new StringBuilder();
+                      String stored = x.summary.trim();
 
-                  s.append("Bu dinlemenin amacı ")
-                   .append(x.title)
-                   .append(" konusunda sana yalnız bilgi vermek değil; ")
-                   .append(x.focus==null?"bu alanı":x.focus)
-                   .append(" günlük davranışa çevirmene yardım etmektir.\n\n");
+                      if (stored.startsWith(
+                          "Bu dinlemenin amacı")) {
+
+                          int cut =
+                              stored.indexOf("\n\n");
+
+                          if (cut >= 0 &&
+                              cut + 2 < stored.length())
+                              stored =
+                                  stored.substring(
+                                      cut + 2).trim();
+                      }
+
+                      return x.title +
+                          ".\n\n" +
+                          stored;
+                  }
+
+                  StringBuilder s =
+                      new StringBuilder();
+
+                  s.append(x.title)
+                   .append(".\n\n");
 
                   for (int i=0;i<x.principles.size();i++) {
-                      s.append(i+1).append(". temel ders: ")
+                      s.append(i+1)
+                       .append(". temel ders: ")
                        .append(x.principles.get(i))
                        .append(" Bu fikri son bir haftadan gerçek bir örnekle ilişkilendir. ")
                        .append("Soyut bilgiyi somut davranışa çevirmek değişimi kolaylaştırır.\n\n");
                   }
 
-                  s.append("Şimdi teoriden uygulamaya geçelim. ")
-                   .append("Aynı anda her şeyi değiştirmeye çalışma.\n\n");
+                  s.append("Şimdi uygulamaya geçelim.\n\n");
 
                   for (int i=0;i<x.actions.size();i++) {
                       s.append("Uygulama ")
@@ -807,7 +1171,15 @@ jobs:
                   i.setAction(TtsPlaybackService.ACTION_PLAY_TEXT);
                   i.putExtra(TtsPlaybackService.EXTRA_TITLE,b.title);
                   i.putExtra(TtsPlaybackService.EXTRA_TEXT,lesson(b));
-                  i.putExtra(TtsPlaybackService.EXTRA_RATE,0.9f);
+                  i.putExtra(
+                      TtsPlaybackService.EXTRA_RATE,
+                      savedRate());
+                  i.putExtra(
+                      TtsPlaybackService.EXTRA_PITCH,
+                      savedPitch());
+                  i.putExtra(
+                      TtsPlaybackService.EXTRA_VOICE,
+                      savedVoice());
 
                   try {
                       if(Build.VERSION.SDK_INT>=26)
@@ -851,6 +1223,15 @@ jobs:
                       i.setAction(action);
                       startService(i);
                   } catch(Exception ignored) {}
+              }
+
+              @Override
+              protected void onDestroy() {
+                  if (voicePreviewTts != null) {
+                      voicePreviewTts.stop();
+                      voicePreviewTts.shutdown();
+                  }
+                  super.onDestroy();
               }
 
               private class BooksAdapter extends BaseAdapter {
@@ -1032,6 +1413,7 @@ jobs:
           import android.os.PowerManager;
           import android.speech.tts.TextToSpeech;
           import android.speech.tts.UtteranceProgressListener;
+          import android.speech.tts.Voice;
 
           import java.util.ArrayList;
           import java.util.Locale;
@@ -1053,6 +1435,8 @@ jobs:
               public static final String EXTRA_TITLE = "title";
               public static final String EXTRA_TEXT = "text";
               public static final String EXTRA_RATE = "rate";
+              public static final String EXTRA_PITCH = "pitch";
+              public static final String EXTRA_VOICE = "voice";
               public static final String EXTRA_DELTA = "delta";
 
               private static final String CHANNEL = "gelisim_tts";
@@ -1063,6 +1447,8 @@ jobs:
               private boolean paused = false;
               private boolean playing = false;
               private float rate = 0.9f;
+              private float pitch = 1.0f;
+              private String voiceName = "";
               private String title = "15 Dakikada Gelişim";
 
               private final ArrayList<String> chunks = new ArrayList<>();
@@ -1108,6 +1494,10 @@ jobs:
                       String newTitle = intent.getStringExtra(EXTRA_TITLE);
                       float newRate =
                               intent.getFloatExtra(EXTRA_RATE, rate);
+                      float newPitch =
+                              intent.getFloatExtra(EXTRA_PITCH, pitch);
+                      String newVoice =
+                              intent.getStringExtra(EXTRA_VOICE);
 
                       boolean same =
                               newTitle != null &&
@@ -1118,7 +1508,12 @@ jobs:
                           if (paused) resumePlayback();
                           else pausePlayback();
                       } else {
-                          startNew(newTitle, text, newRate);
+                          startNew(
+                              newTitle,
+                              text,
+                              newRate,
+                              newPitch,
+                              newVoice);
                       }
 
                   } else if (ACTION_TOGGLE.equals(action)) {
@@ -1138,7 +1533,9 @@ jobs:
               private void startNew(
                       String newTitle,
                       String text,
-                      float newRate) {
+                      float newRate,
+                      float newPitch,
+                      String newVoice) {
 
                   if (text == null || text.trim().isEmpty()) {
                       stopSelf();
@@ -1151,6 +1548,13 @@ jobs:
                           : newTitle;
 
                   rate = clamp(newRate);
+                  pitch = clampPitch(newPitch);
+                  voiceName =
+                      newVoice == null
+                          ? ""
+                          : newVoice;
+
+                  applyVoiceSettings();
 
                   chunks.clear();
                   chunks.addAll(split(text));
@@ -1255,7 +1659,9 @@ jobs:
                       return;
                   }
 
+                  applyVoiceSettings();
                   tts.setSpeechRate(rate);
+                  tts.setPitch(pitch);
 
                   String utteranceId =
                           "chunk-" + index;
@@ -1289,7 +1695,9 @@ jobs:
                           .show();
                   }
 
+                  applyVoiceSettings();
                   tts.setSpeechRate(rate);
+                  tts.setPitch(pitch);
 
                   tts.setAudioAttributes(
                       new AudioAttributes.Builder()
@@ -1387,6 +1795,32 @@ jobs:
                       out.add(cleaned);
 
                   return out;
+              }
+
+              private float clampPitch(float v) {
+                  return Math.max(
+                      0.60f,
+                      Math.min(1.40f, v));
+              }
+
+              private void applyVoiceSettings() {
+                  if (tts == null) return;
+
+                  tts.setLanguage(
+                      new Locale("tr", "TR"));
+
+                  if (voiceName == null ||
+                      voiceName.trim().isEmpty() ||
+                      tts.getVoices() == null)
+                      return;
+
+                  for (Voice v : tts.getVoices()) {
+                      if (v != null &&
+                          voiceName.equals(v.getName())) {
+                          tts.setVoice(v);
+                          break;
+                      }
+                  }
               }
 
               private float clamp(float v) {
