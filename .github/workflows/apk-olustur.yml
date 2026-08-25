@@ -1,4 +1,4 @@
-name: APK Oluştur - KitUP Kartlar v11.1
+name: APK Oluştur - KitUP Kartlar + Katalog v11.2
 
 on:
   workflow_dispatch:
@@ -113,6 +113,10 @@ jobs:
           import android.app.Activity;
           import android.app.AlertDialog;
           import android.content.Intent;
+          import android.content.ClipData;
+          import android.content.ClipboardManager;
+          import android.content.Context;
+          import android.net.Uri;
           import android.content.pm.PackageManager;
           import android.graphics.Color;
           import android.graphics.Typeface;
@@ -139,6 +143,7 @@ jobs:
           import org.json.JSONObject;
 
           import java.io.BufferedReader;
+          import java.io.InputStream;
           import java.io.InputStreamReader;
           import java.net.HttpURLConnection;
           import java.net.URL;
@@ -146,11 +151,15 @@ jobs:
           import java.util.LinkedHashSet;
           import java.util.Locale;
           import java.util.Set;
+          import java.net.URLEncoder;
 
           public class MainActivity extends Activity {
 
               private static final String CATALOG_URL =
                   "https://gncbzkrt.github.io/aile-sesli-kitap/catalog.json";
+              private static final int PICK_CATALOG = 2001;
+              private static final String PREFS = "gelisim_catalog";
+              private static final String PREF_CUSTOM_JSON = "custom_catalog_json";
 
               private final ArrayList<Book> all = new ArrayList<>();
               private final ArrayList<Book> shown = new ArrayList<>();
@@ -177,7 +186,23 @@ jobs:
                   }
 
                   buildUi();
-                  loadCatalog();
+
+                  String saved = getSharedPreferences(PREFS, MODE_PRIVATE)
+                      .getString(PREF_CUSTOM_JSON, "");
+
+                  if (saved != null && !saved.trim().isEmpty()) {
+                      try {
+                          applyCatalogJson(saved, false);
+                          Toast.makeText(
+                              this,
+                              "Yerel katalog kullanılıyor: " + all.size() + " içerik",
+                              Toast.LENGTH_SHORT).show();
+                      } catch (Exception ex) {
+                          loadCatalog();
+                      }
+                  } else {
+                      loadCatalog();
+                  }
               }
 
               private int dp(int v) {
@@ -263,6 +288,71 @@ jobs:
                   head.addView(adult);
                   root.addView(head);
 
+                  LinearLayout catalogBox = new LinearLayout(this);
+                  catalogBox.setOrientation(LinearLayout.VERTICAL);
+                  catalogBox.setPadding(dp(8), dp(8), dp(8), dp(8));
+                  catalogBox.setBackground(
+                      rounded(Color.rgb(14,18,23), Color.rgb(34,42,49), 18, 1));
+
+                  TextView catalogTitle = tv(
+                      "Katalog Yönetimi", 12, Color.rgb(173,181,186), true);
+                  catalogBox.addView(catalogTitle);
+
+                  LinearLayout catalogActions = new LinearLayout(this);
+                  catalogActions.setOrientation(LinearLayout.HORIZONTAL);
+
+                  Button request = new Button(this);
+                  request.setText("+ İçerik");
+                  styleButton(request, Color.rgb(240,166,42), Color.rgb(18,18,18));
+                  request.setOnClickListener(v -> showContentRequest());
+
+                  Button importBtn = new Button(this);
+                  importBtn.setText("Dosya Yükle");
+                  styleButton(importBtn, Color.rgb(31,38,44), Color.WHITE);
+                  importBtn.setOnClickListener(v -> pickCatalogFile());
+
+                  Button updateBtn = new Button(this);
+                  updateBtn.setText("↻ Güncelle");
+                  styleButton(updateBtn, Color.rgb(31,38,44), Color.WHITE);
+                  updateBtn.setOnClickListener(v -> {
+                      getSharedPreferences(PREFS, MODE_PRIVATE)
+                          .edit().remove(PREF_CUSTOM_JSON).apply();
+                      loadCatalog();
+                  });
+
+                  catalogActions.addView(
+                      request,
+                      new LinearLayout.LayoutParams(
+                          0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+                  View cg1 = new View(this);
+                  catalogActions.addView(cg1, new LinearLayout.LayoutParams(dp(6), 1));
+
+                  catalogActions.addView(
+                      importBtn,
+                      new LinearLayout.LayoutParams(
+                          0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+                  View cg2 = new View(this);
+                  catalogActions.addView(cg2, new LinearLayout.LayoutParams(dp(6), 1));
+
+                  catalogActions.addView(
+                      updateBtn,
+                      new LinearLayout.LayoutParams(
+                          0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+                  LinearLayout.LayoutParams caLp = new LinearLayout.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT,
+                      ViewGroup.LayoutParams.WRAP_CONTENT);
+                  caLp.setMargins(0, dp(7), 0, 0);
+                  catalogBox.addView(catalogActions, caLp);
+
+                  LinearLayout.LayoutParams cbLp = new LinearLayout.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT,
+                      ViewGroup.LayoutParams.WRAP_CONTENT);
+                  cbLp.setMargins(0, dp(10), 0, 0);
+                  root.addView(catalogBox, cbLp);
+
                   search = new EditText(this);
                   search.setHint("Konu, kitap, yazar veya beceri ara…");
                   search.setHintTextColor(Color.rgb(112,121,128));
@@ -298,7 +388,11 @@ jobs:
                   Button refresh = new Button(this);
                   refresh.setText("↻");
                   styleButton(refresh, Color.rgb(31,37,43), Color.WHITE);
-                  refresh.setOnClickListener(v -> loadCatalog());
+                  refresh.setOnClickListener(v -> {
+                      getSharedPreferences(PREFS, MODE_PRIVATE)
+                          .edit().remove(PREF_CUSTOM_JSON).apply();
+                      loadCatalog();
+                  });
                   info.addView(refresh);
 
                   LinearLayout.LayoutParams infoLp =
@@ -450,44 +544,24 @@ jobs:
                           br.close();
                           c.disconnect();
 
-                          JSONObject root = new JSONObject(sb.toString());
-                          JSONArray arr = root.getJSONArray("items");
-                          ArrayList<Book> temp = new ArrayList<>();
-
-                          for (int i=0;i<arr.length();i++) {
-                              JSONObject o = arr.getJSONObject(i);
-                              Book x = new Book();
-
-                              x.id=o.optString("id");
-                              x.title=o.optString("title");
-                              x.author=o.optString("author");
-                              x.category=o.optString("category");
-                              x.focus=o.optString("focus");
-                              x.duration=o.optString("duration","≈12–15 dk");
-                              x.source=o.optString("source","");
-                              x.summary=o.optString("summary","");
-                              x.adult=o.optBoolean("adult",false);
-                              x.religion=o.optBoolean("religion",false);
-
-                              JSONArray ps=o.optJSONArray("principles");
-                              if(ps!=null)
-                                  for(int j=0;j<ps.length();j++)
-                                      x.principles.add(ps.optString(j));
-
-                              JSONArray ac=o.optJSONArray("actions");
-                              if(ac!=null)
-                                  for(int j=0;j<ac.length();j++)
-                                      x.actions.add(ac.optString(j));
-
-                              temp.add(x);
-                          }
+                          String raw = sb.toString();
 
                           runOnUiThread(() -> {
-                              all.clear();
-                              all.addAll(temp);
-                              rebuildCategories();
-                              progress.setVisibility(View.GONE);
-                              filter();
+                              try {
+                                  applyCatalogJson(raw, false);
+                                  progress.setVisibility(View.GONE);
+                                  Toast.makeText(
+                                      this,
+                                      "Katalog güncellendi: " + all.size() + " içerik",
+                                      Toast.LENGTH_SHORT).show();
+                              } catch (Exception ex) {
+                                  progress.setVisibility(View.GONE);
+                                  count.setText("Katalog geçersiz.");
+                                  Toast.makeText(
+                                      this,
+                                      "Katalog biçimi geçersiz.",
+                                      Toast.LENGTH_LONG).show();
+                              }
                           });
 
                       } catch(Exception e) {
@@ -501,6 +575,163 @@ jobs:
                           });
                       }
                   }).start();
+              }
+
+              private void applyCatalogJson(String raw, boolean saveLocal) throws Exception {
+                  JSONObject root = new JSONObject(raw);
+                  JSONArray arr = root.getJSONArray("items");
+                  ArrayList<Book> temp = new ArrayList<>();
+
+                  for (int i=0;i<arr.length();i++) {
+                      JSONObject o = arr.getJSONObject(i);
+                      Book x = new Book();
+
+                      x.id=o.optString("id");
+                      x.title=o.optString("title");
+                      x.author=o.optString("author");
+                      x.category=o.optString("category");
+                      x.focus=o.optString("focus");
+                      x.duration=o.optString("duration","≈12–15 dk");
+                      x.source=o.optString("source","");
+                      x.summary=o.optString("summary","");
+                      x.adult=o.optBoolean("adult",false);
+                      x.religion=o.optBoolean("religion",false);
+
+                      JSONArray ps=o.optJSONArray("principles");
+                      if(ps!=null)
+                          for(int j=0;j<ps.length();j++)
+                              x.principles.add(ps.optString(j));
+
+                      JSONArray ac=o.optJSONArray("actions");
+                      if(ac!=null)
+                          for(int j=0;j<ac.length();j++)
+                              x.actions.add(ac.optString(j));
+
+                      temp.add(x);
+                  }
+
+                  if (temp.isEmpty())
+                      throw new IllegalArgumentException("Boş katalog");
+
+                  all.clear();
+                  all.addAll(temp);
+
+                  if (saveLocal) {
+                      getSharedPreferences(PREFS, MODE_PRIVATE)
+                          .edit().putString(PREF_CUSTOM_JSON, raw).apply();
+                  }
+
+                  rebuildCategories();
+                  progress.setVisibility(View.GONE);
+                  filter();
+              }
+
+              private void pickCatalogFile() {
+                  Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                  i.addCategory(Intent.CATEGORY_OPENABLE);
+                  i.setType("application/json");
+                  startActivityForResult(i, PICK_CATALOG);
+              }
+
+              @Override
+              protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  super.onActivityResult(requestCode, resultCode, data);
+
+                  if (requestCode != PICK_CATALOG ||
+                      resultCode != RESULT_OK ||
+                      data == null ||
+                      data.getData() == null) return;
+
+                  try {
+                      Uri uri = data.getData();
+                      InputStream in = getContentResolver().openInputStream(uri);
+                      BufferedReader br = new BufferedReader(
+                          new InputStreamReader(in, "UTF-8"));
+
+                      StringBuilder sb = new StringBuilder();
+                      String line;
+                      while ((line = br.readLine()) != null) sb.append(line);
+                      br.close();
+
+                      applyCatalogJson(sb.toString(), true);
+
+                      Toast.makeText(
+                          this,
+                          "Yeni katalog yüklendi: " + all.size() + " içerik",
+                          Toast.LENGTH_LONG).show();
+
+                  } catch (Exception ex) {
+                      Toast.makeText(
+                          this,
+                          "Katalog dosyası geçerli değil.",
+                          Toast.LENGTH_LONG).show();
+                  }
+              }
+
+              private String buildRequestPrompt(int target, String note) {
+                  return "15 Dakikada Gelişim uygulamamın catalog.json kataloğunu genişlet. " +
+                      "Mevcut içerik sayısı " + all.size() + ", hedef toplam " + target + ". " +
+                      "Tüm görünür ve dinlenen içerik Türkçe olacak. " +
+                      "İçerikler kitap tanıtımı değil, kişisel gelişime katkı sağlayan uygulanabilir dersler olacak. " +
+                      "Mevcut id ve başlıkları tekrar etme. Din & Hayat ve 18+ Yetişkin kategorilerini koru. " +
+                      "Uygulama koduna dokunma; yalnız güncellenmiş catalog.json dosyasını üret." +
+                      (note == null || note.trim().isEmpty() ? "" : " Ek isteğim: " + note.trim());
+              }
+
+              private void showContentRequest() {
+                  LinearLayout box = new LinearLayout(this);
+                  box.setOrientation(LinearLayout.VERTICAL);
+                  box.setPadding(dp(18), dp(8), dp(18), 0);
+
+                  EditText target = new EditText(this);
+                  target.setHint("Hedef toplam içerik");
+                  target.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+                  target.setText(String.valueOf(Math.max(1500, all.size()+500)));
+                  box.addView(target);
+
+                  EditText note = new EditText(this);
+                  note.setHint("Ek istek: örn. Din & Hayat 200 olsun…");
+                  note.setMinLines(2);
+                  box.addView(note);
+
+                  AlertDialog dialog = new AlertDialog.Builder(this)
+                      .setTitle("Yeni İçerik Talep Et")
+                      .setMessage("Hedef sayıyı yaz. Hazır talebi kopyalayabilir veya paylaşabilirsin.")
+                      .setView(box)
+                      .setNegativeButton("Kapat", null)
+                      .setNeutralButton("Kopyala", null)
+                      .setPositiveButton("Paylaş", null)
+                      .create();
+
+                  dialog.setOnShowListener(x -> {
+                      dialog.getButton(AlertDialog.BUTTON_NEUTRAL)
+                          .setOnClickListener(v -> {
+                              int t;
+                              try { t = Integer.parseInt(target.getText().toString().trim()); }
+                              catch (Exception e) { t = Math.max(1500, all.size()+500); }
+
+                              String prompt = buildRequestPrompt(t, note.getText().toString());
+                              ClipboardManager cm = (ClipboardManager)
+                                  getSystemService(Context.CLIPBOARD_SERVICE);
+                              cm.setPrimaryClip(ClipData.newPlainText("İçerik talebi", prompt));
+                              Toast.makeText(this, "Talep kopyalandı.", Toast.LENGTH_SHORT).show();
+                          });
+
+                      dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                          .setOnClickListener(v -> {
+                              int t;
+                              try { t = Integer.parseInt(target.getText().toString().trim()); }
+                              catch (Exception e) { t = Math.max(1500, all.size()+500); }
+
+                              String prompt = buildRequestPrompt(t, note.getText().toString());
+                              Intent share = new Intent(Intent.ACTION_SEND);
+                              share.setType("text/plain");
+                              share.putExtra(Intent.EXTRA_TEXT, prompt);
+                              startActivity(Intent.createChooser(share, "İçerik talebini paylaş"));
+                          });
+                  });
+
+                  dialog.show();
               }
 
               private void filter() {
@@ -789,6 +1020,10 @@ jobs:
           import android.app.PendingIntent;
           import android.app.Service;
           import android.content.Intent;
+          import android.content.ClipData;
+          import android.content.ClipboardManager;
+          import android.content.Context;
+          import android.net.Uri;
           import android.media.AudioAttributes;
           import android.media.session.MediaSession;
           import android.media.session.PlaybackState;
