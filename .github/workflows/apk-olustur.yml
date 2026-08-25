@@ -1,4 +1,4 @@
-name: APK Oluştur - Kart Açma Fix v7
+name: APK Oluştur - Karttan Direkt Ses v8
 
 on:
   workflow_dispatch:
@@ -70,8 +70,8 @@ jobs:
                   applicationId 'com.guncelgelisim.app'
                   minSdk 26
                   targetSdk 35
-                  versionCode 6
-                  versionName '1.5.0'
+                  versionCode 7
+                  versionName '1.6.0'
               }
 
               compileOptions {
@@ -193,7 +193,7 @@ jobs:
                   testButton.setText("🔊 Test");
 
                   Button playButton = new Button(this);
-                  playButton.setText("▶ Dinle");
+                  playButton.setText("▶ Açık Özeti Dinle");
 
                   Button pauseButton = new Button(this);
                   pauseButton.setText("⏯");
@@ -273,8 +273,44 @@ jobs:
               private void installNativeHint() {
                   String js =
                       "javascript:(function(){" +
-                      "if(window.__ANDROID_CARD_FIX_V7__)return;" +
-                      "window.__ANDROID_CARD_FIX_V7__=true;" +
+                      "if(window.__ANDROID_DIRECT_V8__)return;" +
+                      "window.__ANDROID_DIRECT_V8__=true;" +
+
+                      "function findItem(id){" +
+                      "try{" +
+                      "if(typeof ITEMS!=='undefined'&&Array.isArray(ITEMS)){" +
+                      "return ITEMS.find(function(x){return x.id===id;})||null;" +
+                      "}" +
+                      "}catch(e){}" +
+                      "return null;" +
+                      "}" +
+
+                      "function lesson(x){" +
+                      "try{" +
+                      "if(typeof composeLesson==='function')return composeLesson(x);" +
+                      "}catch(e){}" +
+                      "if(x&&x.summary)return x.summary;" +
+                      "var out=[];" +
+                      "out.push('Bu dinlemenin amacı '+x.title+' konusunda kişisel gelişimine katkı sağlayacak fikirleri günlük hayata çevirmektir.');" +
+                      "(x.principles||[]).forEach(function(v,i){" +
+                      "out.push((i+1)+'. temel ders: '+v+' Bu fikri son bir haftadan gerçek bir örnekle ilişkilendir. Soyut bilgiyi somut davranışa çevirmek değişimi kolaylaştırır.');" +
+                      "});" +
+                      "(x.actions||[]).forEach(function(v,i){" +
+                      "out.push('Uygulama '+(i+1)+': '+v+' Bunu küçük, ölçülebilir ve bugün uygulanabilir hale getir.');" +
+                      "});" +
+                      "out.push('Dinleme sonrası muhasebe: Hangi fikri benimsedim? Hangi davranışım bununla çelişiyor? Önümüzdeki yedi gün hangi küçük davranışı tekrarlayacağım?');" +
+                      "return out.join('\n\n');" +
+                      "}" +
+
+                      "function playId(id){" +
+                      "var x=findItem(id);" +
+                      "if(!x){setTimeout(function(){playId(id);},150);return;}" +
+                      "var r=document.querySelector('#rate');" +
+                      "var rate=Number(r&&r.value?r.value:0.9)||0.9;" +
+                      "var text=lesson(x);" +
+                      "if(window.speechSynthesis)window.speechSynthesis.cancel();" +
+                      "AndroidTTS.playDirect(String(x.title||'15 Dakikada Gelişim'),String(text||''),rate);" +
+                      "}" +
 
                       "document.addEventListener('click',function(e){" +
                       "var el=e.target&&e.target.closest?e.target.closest('[data-open]'):null;" +
@@ -282,21 +318,17 @@ jobs:
                       "var id=el.getAttribute('data-open');" +
                       "if(!id)return;" +
 
-                      "try{" +
-                      "if(typeof openItem==='function'){" +
-                      "openItem(id);" +
-                      "setTimeout(function(){" +
-                      "var p=document.querySelector('#player');" +
-                      "if(p&&p.classList)p.classList.remove('hidden');" +
-                      "var play=document.querySelector('#play');" +
-                      "if(play){" +
-                      "play.textContent='↓ Android oynatıcıyı kullan';" +
-                      "play.disabled=true;" +
-                      "play.style.opacity='0.55';" +
+                      "if(el.classList&&el.classList.contains('listen')){" +
+                      "e.preventDefault();" +
+                      "e.stopPropagation();" +
+                      "e.stopImmediatePropagation();" +
+                      "playId(id);" +
+                      "return;" +
                       "}" +
-                      "},80);" +
+
+                      "if(el.classList&&el.classList.contains('cover')){" +
+                      "try{if(typeof openItem==='function')openItem(id);}catch(err){}" +
                       "}" +
-                      "}catch(err){console.error('Kart açma hatası',err);}" +
                       "},true);" +
 
                       "})();";
@@ -361,8 +393,8 @@ jobs:
                                           + "})()",
                                       ignored -> Toast.makeText(
                                           this,
-                                          "Kart açılmadı. Aynı karta bir kez daha dokun, "
-                                              + "sonra alttaki DİNLE'ye bas.",
+                                          "Kart üzerindeki sarı DİNLE düğmesine bas. "
+                                              + "Bu sürümde doğrudan Android sesi başlatır.",
                                           Toast.LENGTH_LONG)
                                           .show());
                                   return;
@@ -499,6 +531,24 @@ jobs:
                                       .show();
                               }
                           });
+                  }
+
+                  @JavascriptInterface
+                  public void playDirect(String title, String text, double rate) {
+                      if (text == null || text.trim().isEmpty()) {
+                          new android.os.Handler(android.os.Looper.getMainLooper())
+                              .post(() -> android.widget.Toast.makeText(
+                                  context,
+                                  "İçerik metni hazırlanamadı.",
+                                  android.widget.Toast.LENGTH_LONG).show());
+                          return;
+                      }
+                      send(
+                          TtsPlaybackService.ACTION_PLAY_TEXT,
+                          title,
+                          text,
+                          (float) rate,
+                          0);
                   }
 
                   @JavascriptInterface
